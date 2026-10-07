@@ -81,7 +81,8 @@
     "stars": "Stars",
     "constellations": "Constellations",
     "deepSky": "Deep Sky",
-    "layers": "Layers"
+    "layers": "Layers",
+    "visibleNow": "Visible now"
   },
   "layers": {
     "title": "Sky layers",
@@ -119,7 +120,12 @@
     "insecure": "Sensors need a secure (HTTPS) connection. Use the map manually.",
     "noData": "No sensor data received. Use the map manually.",
     "relativeHeading": "Compass heading is unavailable — the view may be rotated. Calibrate in Settings.",
-    "compassHint": "If directions look wrong, move your phone in a figure-8 to calibrate the compass."
+    "compassHint": "If directions look wrong, move your phone in a figure-8 to calibrate the compass.",
+    "calibrating": "Calibrating compass…",
+    "ready": "Pointing ready",
+    "needsCalibration": "Compass needs calibration — directions may be off.",
+    "uncalibrated": "No compass north reference — calibrate on a known object.",
+    "calibrateAction": "Calibrate"
   },
   "search": {
     "title": "Search",
@@ -371,5 +377,23 @@
     "M82": "Cigar Galaxy",
     "M101": "Pinwheel Galaxy",
     "M104": "Sombrero Galaxy"
+  },
+  "practical": {
+    "visible": "Visible",
+    "difficult": "Difficult",
+    "notPractical": "Not practically visible",
+    "belowHorizon": "Below horizon",
+    "label": "Naked eye",
+    "note": "Estimate for a clear sky with moderate light pollution; weather is not taken into account.",
+    "reasons": {
+      "belowHorizon": "{{name}} is below the horizon.",
+      "lowAltitude": "{{name}} is only {{alt}}° above the horizon.",
+      "daylight": "The sky is too bright (daytime).",
+      "twilight": "The sky is still too bright (twilight).",
+      "tooFaint": "Too faint for the naked eye in these conditions.",
+      "faint": "Faint — needs a dark sky away from city lights.",
+      "clear": "Easy to see with the naked eye in a clear sky.",
+      "sun": "Never look at the Sun without a proper solar filter."
+    }
   }
 }

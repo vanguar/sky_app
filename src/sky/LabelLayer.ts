@@ -5,6 +5,7 @@ import type { Catalog, DeepSkyCategory } from '../catalog/types';
 import type { Layers } from '../store/sky-store';
 import { isCategoryVisible } from './DeepSkyLayer';
 import type { LabelTexts, SolarRenderItem } from './types';
+import { pointPassesFilter, worldAltitudeDeg, type PracticalFilterState } from './practical-filter';
 
 const FONT_STACK =
   'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", Tahoma, sans-serif';
@@ -28,6 +29,7 @@ export interface LabelFrame {
   daylight: number;
   selectedEqj: THREE.Vector3 | null;
   selectedIsWorld: boolean;
+  practical: PracticalFilterState;
 }
 
 /**
@@ -188,7 +190,7 @@ export class LabelLayer {
     // Solar System bodies.
     for (const b of this.bodies) {
       const layerOn = b.id === 'sun' ? f.layers.sun : b.id === 'moon' ? f.layers.moon : f.layers.planets;
-      if (!layerOn) continue;
+      if (!layerOn || (f.practical.enabled && !b.practicalVisible)) continue;
       this.tmp.set(b.eqj.x, b.eqj.y, b.eqj.z);
       if (!this.project(this.tmp, true, f, p)) continue;
       const name = texts.bodies[b.id as SolarBodyId];
@@ -201,6 +203,20 @@ export class LabelLayer {
       const dayLimit = limit - f.daylight * 3;
       for (const s of this.stars) {
         if (s.mag > dayLimit) break;
+        if (
+          f.practical.enabled &&
+          !pointPassesFilter(
+            f.practical,
+            s.mag,
+            worldAltitudeDeg(
+              f.celestial,
+              this.starEqj[s.idx * 3],
+              this.starEqj[s.idx * 3 + 1],
+              this.starEqj[s.idx * 3 + 2],
+            ),
+          )
+        )
+          continue;
         this.tmp.set(this.starEqj[s.idx * 3], this.starEqj[s.idx * 3 + 1], this.starEqj[s.idx * 3 + 2]);
         if (!this.project(this.tmp, true, f, p)) continue;
         const name = texts.stars.get(s.hip);
@@ -210,7 +226,7 @@ export class LabelLayer {
 
     // Constellation names.
     const allNames = f.layers.constellationNames;
-    if (allNames || f.layers.zodiac) {
+    if ((allNames || f.layers.zodiac) && !f.practical.constellationsHidden) {
       for (const c of this.constellations) {
         if (!allNames && !c.zodiac) continue;
         const name = texts.constellations.get(c.abbr);
@@ -236,6 +252,7 @@ export class LabelLayer {
       for (const m of this.messier) {
         if (m.mag > magLimit) break;
         if (!isCategoryVisible(m.category, f.layers)) continue;
+        if (f.practical.messierHidden?.[m.idx]) continue;
         this.tmp.set(
           this.messierEqj[m.idx * 3],
           this.messierEqj[m.idx * 3 + 1],

@@ -11,6 +11,8 @@ import { SkyControls } from './SkyControls';
 import { SkyScene } from './SkyScene';
 import { StarLayer } from './StarLayer';
 import type { FrameInfo, LabelTexts, SolarRenderItem, TargetScreenInfo } from './types';
+import { skyLimitingMagnitude } from '../astronomy/naked-eye';
+import { FILTER_OFF, computeMessierHidden, type PracticalFilterState } from './practical-filter';
 
 export class WebGLUnavailableError extends Error {
   constructor(cause?: unknown) {
@@ -61,6 +63,8 @@ export class SkyRenderer {
   private height = 1;
   private dpr = 1;
   private layers: Layers;
+  private practical: PracticalFilterState = FILTER_OFF;
+  private catalog: Catalog | null = null;
   private showLabels = true;
   private daylight = 0;
   private brightness = 1;
@@ -135,6 +139,7 @@ export class SkyRenderer {
   /* ------------------------------------------------------------------ data */
 
   setCatalog(catalog: Catalog): void {
+    this.catalog = catalog;
     this.sky.setCatalog(catalog);
     this.sky.applyLayers(this.layers);
     const starEqj = this.sky.stars!.eqj;
@@ -146,12 +151,13 @@ export class SkyRenderer {
 
   setEqjToWorld(m: Mat3): void {
     this.sky.setEqjToWorld(m);
+    this.refreshPracticalMasks();
     this.invalidate();
   }
 
   setSolarItems(items: SolarRenderItem[]): void {
     this.bodies = items;
-    this.sky.setSolarItems(items);
+    this.sky.setSolarItems(items, this.practical.enabled);
     this.labels.setBodies(items);
     this.picking.setBodies(items);
     this.invalidate();
@@ -166,6 +172,37 @@ export class SkyRenderer {
     this.layers = layers;
     this.sky.applyLayers(layers);
     this.invalidate();
+  }
+
+  /** "Visible now": keep only objects practically visible to the naked eye. */
+  setPracticalFilter(enabled: boolean, sunAltitude: number): void {
+    const skyLimit = skyLimitingMagnitude(sunAltitude);
+    this.practical = {
+      enabled,
+      sunAltitude,
+      skyLimit,
+      messierHidden: null,
+      constellationsHidden: enabled && skyLimit < 2,
+    };
+    this.sky.stars?.setPracticalFilter(enabled, skyLimit);
+    this.sky.constellationsHiddenByFilter = this.practical.constellationsHidden;
+    this.sky.setSolarItems(this.bodies, enabled);
+    this.refreshPracticalMasks();
+    this.invalidate();
+  }
+
+  private refreshPracticalMasks(): void {
+    const deep = this.sky.deepSky;
+    if (!deep || !this.catalog) return;
+    this.practical.messierHidden = this.practical.enabled
+      ? computeMessierHidden(
+          this.catalog.messier,
+          deep.eqj,
+          this.sky.celestial.matrix,
+          this.practical.sunAltitude,
+        )
+      : null;
+    deep.setHidden(this.practical.messierHidden);
   }
 
   setShowLabels(on: boolean): void {
@@ -256,6 +293,7 @@ export class SkyRenderer {
       height: this.height,
       layers: this.layers,
       starMagLimit: StarLayer.magnitudeLimit(this.cam.fov, this.daylight),
+      practical: this.practical,
     };
   }
 
@@ -345,6 +383,7 @@ export class SkyRenderer {
       daylight: this.daylight,
       selectedEqj: this.selected?.vec ?? null,
       selectedIsWorld: this.selected?.world ?? false,
+      practical: this.practical,
     });
 
     if (t - this.lastFrameInfoAt > 100) {

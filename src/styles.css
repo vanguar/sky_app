@@ -1057,3 +1057,59 @@ select option {
   pointer-events: none;
   z-index: 1001;
 }
+
+/* ------------------------------------------------------- sensor status */
+
+.sensor-status {
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 76px);
+  inset-inline: 0;
+  margin-inline: auto;
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 14px;
+  padding-inline: 14px 8px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  z-index: 19;
+}
+
+.sensor-status.warn {
+  border-color: rgba(255, 194, 122, 0.5);
+  color: var(--warn);
+}
+
+.landmark-label.landing {
+  color: #ffd9a8;
+}
+
+.visible-now-btn {
+  border-color: var(--panel-border);
+}
+
+.visible-now-btn[aria-pressed='true'] {
+  color: var(--ok);
+  border-color: rgba(126, 224, 176, 0.5);
+  background: rgba(126, 224, 176, 0.12);
+}
+
+.vis-difficult {
+  color: var(--warn);
+}
+
+.vis-not {
+  color: var(--danger);
+}
+
+.practical-reason {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
+.practical-note {
+  font-size: 0.75rem;
+  margin-top: 0;
+}

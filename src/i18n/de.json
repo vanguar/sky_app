@@ -81,7 +81,8 @@
     "stars": "Sterne",
     "constellations": "Sternbilder",
     "deepSky": "Deep Sky",
-    "layers": "Ebenen"
+    "layers": "Ebenen",
+    "visibleNow": "Jetzt sichtbar"
   },
   "layers": {
     "title": "Himmelsebenen",
@@ -119,7 +120,12 @@
     "insecure": "Sensoren benötigen eine sichere (HTTPS-)Verbindung. Bitte bediene die Karte manuell.",
     "noData": "Keine Sensordaten empfangen. Bitte bediene die Karte manuell.",
     "relativeHeading": "Kompassrichtung nicht verfügbar — die Ansicht kann verdreht sein. Kalibriere in den Einstellungen.",
-    "compassHint": "Wenn die Richtungen falsch wirken, bewege dein Handy in einer Acht, um den Kompass zu kalibrieren."
+    "compassHint": "Wenn die Richtungen falsch wirken, bewege dein Handy in einer Acht, um den Kompass zu kalibrieren.",
+    "calibrating": "Kompass wird kalibriert…",
+    "ready": "Ausrichtung bereit",
+    "needsCalibration": "Kompass muss kalibriert werden — Richtungen können abweichen.",
+    "uncalibrated": "Keine Nordreferenz vom Kompass — kalibriere an einem bekannten Objekt.",
+    "calibrateAction": "Kalibrieren"
   },
   "search": {
     "title": "Suche",
@@ -371,5 +377,23 @@
     "M82": "Zigarrengalaxie",
     "M101": "Feuerradgalaxie",
     "M104": "Sombrerogalaxie"
+  },
+  "practical": {
+    "visible": "Gut sichtbar",
+    "difficult": "Schwierig",
+    "notPractical": "Praktisch nicht sichtbar",
+    "belowHorizon": "Unter dem Horizont",
+    "label": "Bloßes Auge",
+    "note": "Schätzung für klaren Himmel mit mäßiger Lichtverschmutzung; das Wetter wird nicht berücksichtigt.",
+    "reasons": {
+      "belowHorizon": "{{name}} steht unter dem Horizont.",
+      "lowAltitude": "{{name}} steht nur {{alt}}° über dem Horizont.",
+      "daylight": "Der Himmel ist zu hell (Tag).",
+      "twilight": "Der Himmel ist noch zu hell (Dämmerung).",
+      "tooFaint": "Unter diesen Bedingungen zu lichtschwach für das bloße Auge.",
+      "faint": "Lichtschwach — braucht einen dunklen Himmel fern von Stadtlicht.",
+      "clear": "Bei klarem Himmel mit bloßem Auge leicht zu sehen.",
+      "sun": "Schau nie ohne geeigneten Sonnenfilter in die Sonne."
+    }
   }
 }

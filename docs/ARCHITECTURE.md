@@ -68,20 +68,43 @@ AstroPoint is a client-only PWA: **React + TypeScript + Vite** for the UI, **Thr
 
 ## Sensors
 
+Device orientation (camera) and astronomical positions are strictly separated: sensors only rotate the
+camera; the sky (`celestial` group) depends on time + location only.
+
 ```
-DeviceOrientation (absolute | webkitCompassHeading | relative)
-  → HeadingResolver (absolute alpha, or low-passed compass offset, or relative)
-  → deviceOrientationToQuaternion (Euler ZXY → quaternion, −90° X, screen-orientation compensation)
-  → calibration offset (manual heading correction, "calibrate on selected object")
-  → target quaternion            ← sensor events only write here
-  → QuaternionSmoother (dead zone + adaptive exponential slerp)   ← render loop, once per frame
-  → camera.quaternion
+deviceorientation (relative, gyro-stable)  ──► qRelative (device frame) ──────────────────────┐
+deviceorientationabsolute / webkitCompassHeading                                              │
+   └─► offset measurement m = absHeading − relHeading (same device axis: back camera / top edge)
+          └─► HeadingEstimator: startup series (2.5–6 s, robust circular mean, spread check)
+                             jump detector (offset change > 8° without device rotation = suspicious;
+                             accepted only if it persists ≥ 3 s, then blended in ≤ 4°/s)
+   yaw offset = estimator + WMM magnetic declination (magnetic → true north) + manual calibration
+target = Ry(−yaw) · qRelative · Rz(−screenAngle) ─► QuaternionSmoother (render loop) ─► camera
 ```
+
+* Physical rotation changes absolute and relative headings equally, so it cancels in `m`; a change of
+  `m` means the magnetic heading moved on its own (re-calibration, disturbance).
+* Modes are decided once per session: `fused` (Android: both streams), `compass` (iOS),
+  `absolute-only` (gyro rates from `devicemotion` tell real turns from compass jumps), `relative-only`
+  (no north reference → "compass needs calibration").
+* UI status: "Calibrating compass…" → "Pointing ready", or "Compass needs calibration" with a shortcut to
+  manual calibration on a known object.
+* Development diagnostics: in `npm run dev` (or with `?sensorDebug=1`) a snapshot of the pipeline is logged
+  every 500 ms (`sensor-diagnostics.ts`); production builds stay silent.
 
 `SensorProvider` is an interface; `BrowserSensorProvider` is the web implementation. A Capacitor build would add a
 `NativeSensorProvider` (and `CapacitorLocationProvider`) in `src/app/providers/platform.ts` only.
-Permissions are requested only from user gestures (iOS 13+). A watchdog falls back to free mode with a message
-when no data arrives (desktop browsers, denied permissions, missing sensors).
+
+## Visibility
+
+* Geometric: altitude > 0 (refracted), rise/set/transit, circumpolar.
+* Practical naked-eye (`astronomy/naked-eye.ts`): magnitude + extinction (Kasten–Young airmass, k = 0.25),
+  sky limiting magnitude from the Sun's altitude (day / twilight / night, generic suburban night limit 5.5),
+  a horizon rule (< 5° at best "difficult"), a penalty for diffuse deep-sky objects. Statuses: visible,
+  difficult, not practically visible, below horizon — each with a reason. No weather or light-pollution data
+  is used; the UI says so.
+* "Visible now" filter hides everything not practically visible (stars in the shader, planets, Messier,
+  labels, picking), without changing the normal astronomy view.
 
 ## State
 

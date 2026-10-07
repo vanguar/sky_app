@@ -17,6 +17,8 @@ import {
   temperatureFromBV,
 } from '../../catalog/stars/stars';
 import type { Catalog, LanguageCode, SkyObjectRef } from '../../catalog/types';
+import { practicalVisibilityOf } from '../../catalog/practical';
+import { PRACTICAL_CLASS } from './practical-ui';
 import { useCatalogStore } from '../../store/catalog-store';
 import { useSettingsStore, type InfoLevel } from '../../store/settings-store';
 import { useSkyStore } from '../../store/sky-store';
@@ -278,8 +280,10 @@ export function ObjectDetailsSheet() {
     [selectedId, minute, observer, platform],
   );
 
+  const practical = ref ? practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer) : null;
+
   const open = panelOpen && !!ref;
-  if (!open || !ref || !visibility) {
+  if (!open || !ref || !visibility || !practical) {
     return (
       <Sheet open={false} title="" onClose={close}>
         {null}
@@ -337,6 +341,22 @@ export function ObjectDetailsSheet() {
           {riseSet?.neverUp ? '—' : eventTime(riseSet?.transit ?? null)}
         </Fact>
       </dl>
+
+      <div className="practical" data-testid="details-practical">
+        <p className="practical-status">
+          <span className="muted">{t('practical.label')}: </span>
+          <strong className={PRACTICAL_CLASS[practical.status]} data-testid="details-practical-status">
+            {t(`practical.${practical.status}`)}
+          </strong>
+        </p>
+        <p className="practical-reason" data-testid="details-practical-reason">
+          {t(`practical.reasons.${practical.reason}`, {
+            name,
+            alt: formatNumber(Math.max(0, practical.altitude), i18n.language, 0),
+          })}
+        </p>
+        <p className="practical-note muted">{t('practical.note')}</p>
+      </div>
 
       <div className="details-actions">
         <button

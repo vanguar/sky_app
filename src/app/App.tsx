@@ -15,6 +15,7 @@ import { SettingsSheet } from '../features/settings/SettingsSheet';
 import { Crosshair } from '../features/sky/Crosshair';
 import { ModeControls } from '../features/sky/ModeControls';
 import { enableSensorMode } from '../features/sky/sensor-mode';
+import { SensorStatus } from '../features/sky/SensorStatus';
 import { SkyView } from '../features/sky/SkyView';
 import { TopBar } from '../features/sky/TopBar';
 import { useCatalogStore } from '../store/catalog-store';
@@ -93,6 +94,7 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
       <TopBar />
       <ModeControls />
       <Navigator />
+      <SensorStatus />
       <FilterBar />
 
       {catalogStatus === 'error' && (

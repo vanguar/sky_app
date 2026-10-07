@@ -51,6 +51,7 @@ export function SkyView() {
 
   const catalog = useCatalogStore((s) => s.catalog);
   const layers = useSkyStore((s) => s.layers);
+  const visibleNow = useSkyStore((s) => s.visibleNow);
   const selectedId = useSkyStore((s) => s.selectedId);
   const navigationTargetId = useSkyStore((s) => s.navigationTargetId);
   const showLabels = useSettingsStore((s) => s.showLabels);
@@ -73,7 +74,11 @@ export function SkyView() {
           if (!r) return;
           let id = r.pick(x, y);
           const l = useSkyStore.getState().layers;
-          if (!id && (l.constellationLines || l.constellationNames || l.zodiac)) {
+          if (
+            !id &&
+            !useSkyStore.getState().visibleNow &&
+            (l.constellationLines || l.constellationNames || l.zodiac)
+          ) {
             const eq = r.screenToEquatorial(x, y);
             const abbr = platform.astronomy.getConstellationAt(eq.ra, eq.dec);
             const con = useCatalogStore.getState().catalog?.constellationsByAbbr.get(abbr);
@@ -148,6 +153,7 @@ export function SkyView() {
       r.setSolarItems(snapshot.items);
       const sun = snapshot.positions.find((p) => p.id === 'sun');
       r.setDaylight(sun ? daylightFactor(sun.horizontal.altitude) : 0);
+      r.setPracticalFilter(useSkyStore.getState().visibleNow, sun?.horizontal.altitude ?? -90);
       const cat = useCatalogStore.getState().catalog;
       const { selectedId: sel, navigationTargetId: nav } = useSkyStore.getState();
       const selRef = sel ? resolveObject(sel, cat) : null;
@@ -162,7 +168,7 @@ export function SkyView() {
       clearInterval(id);
       off();
     };
-  }, [platform, observer, catalog, selectedId, navigationTargetId]);
+  }, [platform, observer, catalog, selectedId, navigationTargetId, visibleNow]);
 
   if (webglError) {
     return (

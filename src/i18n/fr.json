@@ -81,7 +81,8 @@
     "stars": "Étoiles",
     "constellations": "Constellations",
     "deepSky": "Ciel profond",
-    "layers": "Calques"
+    "layers": "Calques",
+    "visibleNow": "Visible maintenant"
   },
   "layers": {
     "title": "Calques du ciel",
@@ -119,7 +120,12 @@
     "insecure": "Les capteurs nécessitent une connexion sécurisée (HTTPS). Utilisez la carte manuellement.",
     "noData": "Aucune donnée des capteurs. Utilisez la carte manuellement.",
     "relativeHeading": "Le cap de la boussole est indisponible — la vue peut être décalée. Calibrez dans les réglages.",
-    "compassHint": "Si les directions semblent fausses, décrivez un huit avec votre téléphone pour calibrer la boussole."
+    "compassHint": "Si les directions semblent fausses, décrivez un huit avec votre téléphone pour calibrer la boussole.",
+    "calibrating": "Calibrage de la boussole…",
+    "ready": "Pointage prêt",
+    "needsCalibration": "La boussole doit être calibrée — les directions peuvent être décalées.",
+    "uncalibrated": "Aucune référence nord de la boussole — calibrez sur un objet connu.",
+    "calibrateAction": "Calibrer"
   },
   "search": {
     "title": "Recherche",
@@ -371,5 +377,23 @@
     "M82": "Galaxie du Cigare",
     "M101": "Galaxie du Moulinet",
     "M104": "Galaxie du Sombrero"
+  },
+  "practical": {
+    "visible": "Bien visible",
+    "difficult": "Difficile",
+    "notPractical": "Pratiquement invisible",
+    "belowHorizon": "Sous l'horizon",
+    "label": "À l'œil nu",
+    "note": "Estimation pour un ciel clair avec une pollution lumineuse modérée ; la météo n'est pas prise en compte.",
+    "reasons": {
+      "belowHorizon": "{{name}} est sous l'horizon.",
+      "lowAltitude": "{{name}} n'est qu'à {{alt}}° au-dessus de l'horizon.",
+      "daylight": "Le ciel est trop lumineux (jour).",
+      "twilight": "Le ciel est encore trop clair (crépuscule).",
+      "tooFaint": "Trop faible pour l'œil nu dans ces conditions.",
+      "faint": "Faible — nécessite un ciel noir loin des lumières de la ville.",
+      "clear": "Facile à voir à l'œil nu par ciel clair.",
+      "sun": "Ne regardez jamais le Soleil sans filtre solaire adapté."
+    }
   }
 }

@@ -72,7 +72,7 @@ export class PlanetLayer {
     this.object.renderOrder = 4;
   }
 
-  setItems(items: SolarRenderItem[]): void {
+  setItems(items: SolarRenderItem[], practicalOnly = false): void {
     const pos = this.geo.getAttribute('position') as THREE.BufferAttribute;
     const base = this.geo.getAttribute('aBaseSize') as THREE.BufferAttribute;
     const diam = this.geo.getAttribute('aAngDiam') as THREE.BufferAttribute;
@@ -87,7 +87,7 @@ export class PlanetLayer {
       pos.setXYZ(i, it.eqj.x * r, it.eqj.y * r, it.eqj.z * r);
       base.setX(i, planetMarkerSize(it.magnitude));
       diam.setX(i, it.angularDiameterDeg);
-      vis.setX(i, 1);
+      vis.setX(i, practicalOnly && !it.practicalVisible ? 0 : 1);
     });
     pos.needsUpdate = base.needsUpdate = diam.needsUpdate = vis.needsUpdate = true;
   }

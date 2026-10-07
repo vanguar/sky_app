@@ -14,7 +14,10 @@ export interface RawOrientationSample {
   beta: number;
   /** Degrees [−90, 90). Left-to-right tilt. */
   gamma: number;
-  /** True when alpha is referenced to magnetic/true north. */
+  /**
+   * Reference frame of alpha: true = earth/magnetic-north referenced (`deviceorientationabsolute`),
+   * false = relative, gyro-stable frame with an arbitrary zero (`deviceorientation`).
+   */
   absolute: boolean;
   /** iOS Safari: compass heading in degrees clockwise from north (`webkitCompassHeading`). */
   compassHeading: number | null;
@@ -44,6 +47,17 @@ export type HeadingQuality = 'absolute' | 'compass' | 'relative';
 
 export type SensorListener = (sample: RawOrientationSample) => void;
 
+/** Gyroscope reading from `devicemotion` (rotation rates in deg/s about device axes). */
+export interface MotionSample {
+  alphaRate: number;
+  betaRate: number;
+  gammaRate: number;
+  intervalMs: number;
+  timestamp: number;
+}
+
+export type MotionListener = (sample: MotionSample) => void;
+
 /**
  * Platform abstraction for orientation sensors. Implemented by BrowserSensorProvider today and,
  * later, by a Capacitor/native provider without touching rendering or UI code.
@@ -52,7 +66,8 @@ export interface SensorProvider {
   getCapabilities(): SensorCapabilities;
   /** Must be called from a user gesture on iOS. */
   requestPermission(): Promise<SensorPermission>;
-  start(listener: SensorListener): void;
+  /** Starts orientation events (both absolute and relative streams where available) and optional gyro. */
+  start(listener: SensorListener, motion?: MotionListener): void;
   stop(): void;
   isRunning(): boolean;
 }

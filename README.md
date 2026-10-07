@@ -24,6 +24,7 @@ in that direction — computed on the device for your place and the current time
 * 3D globes (Moon, Mars, Jupiter with NASA/USGS public-domain maps; Saturn with rings, Mercury, Venus, Uranus,
   Neptune with illustrative textures), rotate / pinch / reset / auto-rotate, Moon & Mars landmarks.
 * 8 languages (en, ru, uk, de, fr, es, it, ar) with live switching and full RTL for Arabic.
+* Practical naked-eye visibility (visible / difficult / not practically visible / below horizon, with a reason) and a “Visible now” filter.
 * Dark UI for night use, brightness control, **night vision (red)** mode.
 * PWA: installable, works offline after the first visit (app shell + catalogs precached; textures cached on use).
 * Privacy: no backend, no account, no analytics. Location never leaves the device.
@@ -75,6 +76,10 @@ Modern Chrome/Edge/Firefox/Safari with WebGL (WebGL 2 preferred). Phone pointing
 Chrome for Android (absolute orientation), Safari on iOS 13+ (permission prompt after a tap).
 
 ## Sensor limitations
+
+* Browser compasses report **magnetic** north; AstroPoint converts to true north with the World Magnetic Model (WMM2025).
+* After enabling phone pointing the compass is stabilised for a few seconds (“Calibrating compass…”); sudden compass jumps without device rotation are ignored unless they persist.
+* Debug: open the app with `?sensorDebug=1` to log the sensor pipeline to the console every 500 ms.
 
 * Compass accuracy depends on the magnetometer; metal, magnets and phone cases cause errors. Use
   Settings → *Compass correction* or *Calibrate on selected object* (point at a known bright object, tap).

@@ -81,7 +81,8 @@
     "stars": "Stelle",
     "constellations": "Costellazioni",
     "deepSky": "Cielo profondo",
-    "layers": "Livelli"
+    "layers": "Livelli",
+    "visibleNow": "Visibile ora"
   },
   "layers": {
     "title": "Livelli del cielo",
@@ -119,7 +120,12 @@
     "insecure": "I sensori richiedono una connessione sicura (HTTPS). Usa la mappa manualmente.",
     "noData": "Nessun dato dai sensori. Usa la mappa manualmente.",
     "relativeHeading": "La bussola non è disponibile: la vista potrebbe essere ruotata. Calibra nelle impostazioni.",
-    "compassHint": "Se le direzioni sembrano sbagliate, muovi il telefono disegnando un otto per calibrare la bussola."
+    "compassHint": "Se le direzioni sembrano sbagliate, muovi il telefono disegnando un otto per calibrare la bussola.",
+    "calibrating": "Calibrazione della bussola…",
+    "ready": "Puntamento pronto",
+    "needsCalibration": "La bussola va calibrata: le direzioni potrebbero essere sfasate.",
+    "uncalibrated": "Nessun riferimento del nord dalla bussola: calibra su un oggetto noto.",
+    "calibrateAction": "Calibra"
   },
   "search": {
     "title": "Cerca",
@@ -371,5 +377,23 @@
     "M82": "Galassia Sigaro",
     "M101": "Galassia Girandola",
     "M104": "Galassia Sombrero"
+  },
+  "practical": {
+    "visible": "Ben visibile",
+    "difficult": "Difficile",
+    "notPractical": "Praticamente non visibile",
+    "belowHorizon": "Sotto l'orizzonte",
+    "label": "A occhio nudo",
+    "note": "Stima per cielo sereno con moderato inquinamento luminoso; il meteo non è considerato.",
+    "reasons": {
+      "belowHorizon": "{{name}} è sotto l'orizzonte.",
+      "lowAltitude": "{{name}} è solo a {{alt}}° sopra l'orizzonte.",
+      "daylight": "Il cielo è troppo luminoso (giorno).",
+      "twilight": "Il cielo è ancora troppo chiaro (crepuscolo).",
+      "tooFaint": "Troppo debole per l'occhio nudo in queste condizioni.",
+      "faint": "Debole: serve un cielo buio lontano dalle luci della città.",
+      "clear": "Facile da vedere a occhio nudo con cielo sereno.",
+      "sun": "Non guardare mai il Sole senza un filtro solare adeguato."
+    }
   }
 }

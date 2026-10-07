@@ -1,5 +1,6 @@
 import { normalizeScreenAngle } from './orientation-normalizer';
 import type {
+  MotionListener,
   RawOrientationSample,
   SensorCapabilities,
   SensorListener,
@@ -27,13 +28,17 @@ function getScreenAngle(): number {
 
 /**
  * DeviceOrientation-based provider for browsers / PWAs.
- *  - Android Chrome: prefers `deviceorientationabsolute` (north-referenced alpha).
- *  - iOS Safari: `deviceorientation` + `webkitCompassHeading`, permission via user gesture.
+ *
+ * Both streams are forwarded, each tagged with its frame, and the pipeline decides how to fuse
+ * them (a single heading value never silently switches its source):
+ *  - `deviceorientation`          → relative, gyro-stable orientation (iOS also adds webkitCompassHeading)
+ *  - `deviceorientationabsolute`  → magnetic-north referenced orientation (Chrome / Android)
+ *  - `devicemotion`               → gyroscope rotation rates (tell real rotation from compass jumps)
  */
 export class BrowserSensorProvider implements SensorProvider {
   private listener: SensorListener | null = null;
-  private eventName: 'deviceorientationabsolute' | 'deviceorientation' | null = null;
-  private absoluteSeen = false;
+  private motion: MotionListener | null = null;
+  private listening = false;
 
   getCapabilities(): SensorCapabilities {
     const hasWindow = typeof window !== 'undefined';
@@ -65,44 +70,56 @@ export class BrowserSensorProvider implements SensorProvider {
     }
   }
 
-  start(listener: SensorListener): void {
+  start(listener: SensorListener, motion?: MotionListener): void {
     this.stop();
     this.listener = listener;
-    this.absoluteSeen = false;
-    this.eventName =
-      'ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation';
-    window.addEventListener(this.eventName, this.handle as EventListener, { passive: true });
-    if (this.eventName === 'deviceorientationabsolute') {
-      // Some browsers expose the absolute event but never fire it; listen to both and prefer absolute.
-      window.addEventListener('deviceorientation', this.handleRelative as EventListener, { passive: true });
+    this.motion = motion ?? null;
+    this.listening = true;
+    window.addEventListener('deviceorientation', this.onRelative as EventListener, { passive: true });
+    if ('ondeviceorientationabsolute' in window) {
+      window.addEventListener('deviceorientationabsolute', this.onAbsolute as EventListener, {
+        passive: true,
+      });
+    }
+    if (this.motion && 'DeviceMotionEvent' in window) {
+      window.addEventListener('devicemotion', this.onMotion as EventListener, { passive: true });
     }
   }
 
   stop(): void {
-    if (this.eventName) {
-      window.removeEventListener(this.eventName, this.handle as EventListener);
-      window.removeEventListener('deviceorientation', this.handleRelative as EventListener);
+    if (this.listening) {
+      window.removeEventListener('deviceorientation', this.onRelative as EventListener);
+      window.removeEventListener('deviceorientationabsolute', this.onAbsolute as EventListener);
+      window.removeEventListener('devicemotion', this.onMotion as EventListener);
     }
-    this.eventName = null;
+    this.listening = false;
     this.listener = null;
+    this.motion = null;
   }
 
   isRunning(): boolean {
     return this.listener !== null;
   }
 
-  private readonly handleRelative = (e: DeviceOrientationEvent) => {
-    if (this.absoluteSeen) return;
-    this.emit(e as WebkitDeviceOrientationEvent, e.absolute === true);
+  // Some browsers (e.g. Firefox for Android) deliver absolute data via 'deviceorientation';
+  // trust the event's own `absolute` flag there.
+  private readonly onRelative = (e: DeviceOrientationEvent) => this.emit(e, e.absolute === true);
+  private readonly onAbsolute = (e: DeviceOrientationEvent) => this.emit(e, true);
+
+  private readonly onMotion = (e: DeviceMotionEvent) => {
+    const r = e.rotationRate;
+    if (!this.motion || !r || r.alpha == null || r.beta == null || r.gamma == null) return;
+    this.motion({
+      alphaRate: r.alpha,
+      betaRate: r.beta,
+      gammaRate: r.gamma,
+      intervalMs: e.interval ?? 16,
+      timestamp: performance.now(),
+    });
   };
 
-  private readonly handle = (e: DeviceOrientationEvent) => {
-    const absolute = this.eventName === 'deviceorientationabsolute' || e.absolute === true;
-    if (this.eventName === 'deviceorientationabsolute' && e.alpha != null) this.absoluteSeen = true;
-    this.emit(e as WebkitDeviceOrientationEvent, absolute);
-  };
-
-  private emit(e: WebkitDeviceOrientationEvent, absolute: boolean): void {
+  private emit(ev: DeviceOrientationEvent, absolute: boolean): void {
+    const e = ev as WebkitDeviceOrientationEvent;
     if (!this.listener || e.alpha == null || e.beta == null || e.gamma == null) return;
     const sample: RawOrientationSample = {
       alpha: e.alpha,

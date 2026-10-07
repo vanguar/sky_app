@@ -9,6 +9,8 @@ export function FilterBar() {
   const layers = useSkyStore((s) => s.layers);
   const applyPreset = useSkyStore((s) => s.applyPreset);
   const openPanel = useUiStore((s) => s.openPanel);
+  const visibleNow = useSkyStore((s) => s.visibleNow);
+  const setVisibleNow = useSkyStore((s) => s.setVisibleNow);
   const active = presetForLayers(layers);
 
   return (
@@ -28,6 +30,18 @@ export function FilterBar() {
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        className={`filter-chip visible-now-btn ${visibleNow ? 'active' : ''}`}
+        aria-pressed={visibleNow}
+        onClick={() => setVisibleNow(!visibleNow)}
+        aria-label={t('filters.visibleNow')}
+        title={t('practical.note')}
+        data-testid="filter-visible-now"
+      >
+        <Icon name="eye" size={18} />
+        <span className="layers-label">{t('filters.visibleNow')}</span>
+      </button>
       <button
         type="button"
         className={`filter-chip layers-btn ${active === 'custom' ? 'active' : ''}`}

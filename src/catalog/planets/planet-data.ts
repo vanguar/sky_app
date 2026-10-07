@@ -159,31 +159,91 @@ export const BODY_COLORS: Record<SolarBodyId, [number, number, number]> = {
   neptune: [0.5, 0.65, 1.0],
 };
 
-/** Named surface features shown on 3D globes (IAU planetary nomenclature; lat/lon in degrees, east-positive). */
+/**
+ * Named surface features shown on 3D globes. Names and planetocentric coordinates (lat, east-positive
+ * lon, degrees) from the IAU Gazetteer of Planetary Nomenclature (USGS, public domain); landing sites
+ * from NASA/ESA/CNSA mission records. Rounded to ~0.1°.
+ */
 export interface Landmark {
   name: string;
   lat: number;
   lon: number;
+  kind: 'feature' | 'landing';
 }
+
+const f = (name: string, lat: number, lon: number): Landmark => ({ name, lat, lon, kind: 'feature' });
+const l = (name: string, lat: number, lon: number): Landmark => ({ name, lat, lon, kind: 'landing' });
 
 export const LANDMARKS: Partial<Record<SolarBodyId, Landmark[]>> = {
   mars: [
-    { name: 'Olympus Mons', lat: 18.65, lon: -133.8 },
-    { name: 'Valles Marineris', lat: -13.9, lon: -59.2 },
-    { name: 'Gale', lat: -5.4, lon: 137.8 },
-    { name: 'Jezero', lat: 18.38, lon: 77.58 },
-    { name: 'Hellas Planitia', lat: -42.4, lon: 70.5 },
-    { name: 'Elysium Mons', lat: 25.02, lon: 147.21 },
-    { name: 'Syrtis Major', lat: 8.4, lon: 69.5 },
+    f('Olympus Mons', 18.65, -133.8),
+    f('Ascraeus Mons', 11.92, -104.08),
+    f('Pavonis Mons', 1.48, -112.96),
+    f('Arsia Mons', -8.26, -120.09),
+    f('Alba Mons', 40.47, -109.6),
+    f('Elysium Mons', 25.02, 147.21),
+    f('Valles Marineris', -13.9, -59.2),
+    f('Noctis Labyrinthus', -6.94, -101.9),
+    f('Hellas Planitia', -42.4, 70.5),
+    f('Argyre Planitia', -49.7, -43.4),
+    f('Utopia Planitia', 46.7, 117.5),
+    f('Acidalia Planitia', 49.76, -20.7),
+    f('Chryse Planitia', 28.4, -40.2),
+    f('Isidis Planitia', 12.9, 87.0),
+    f('Syrtis Major Planum', 8.4, 69.5),
+    f('Hesperia Planum', -21.4, 109.9),
+    f('Arabia Terra', 21.0, 5.0),
+    f('Planum Boreum', 87.3, 0),
+    f('Planum Australe', -83.9, 160),
+    l('Gale · Curiosity', -4.59, 137.44),
+    l('Jezero · Perseverance', 18.44, 77.45),
+    l('Gusev · Spirit', -14.57, 175.47),
+    l('Meridiani · Opportunity', -1.95, -5.53),
+    l('Viking 1', 22.27, -47.95),
+    l('Viking 2', 47.64, 134.29),
+    l('Mars Pathfinder', 19.13, -33.22),
+    l('InSight', 4.5, 135.62),
+    l('Zhurong', 25.07, 109.93),
   ],
   moon: [
-    { name: 'Mare Tranquillitatis', lat: 8.5, lon: 31.4 },
-    { name: 'Apollo 11', lat: 0.674, lon: 23.473 },
-    { name: 'Mare Imbrium', lat: 32.8, lon: -15.6 },
-    { name: 'Mare Serenitatis', lat: 28.0, lon: 17.5 },
-    { name: 'Mare Crisium', lat: 17.0, lon: 59.1 },
-    { name: 'Oceanus Procellarum', lat: 18.4, lon: -57.4 },
-    { name: 'Tycho', lat: -43.31, lon: -11.36 },
-    { name: 'Copernicus', lat: 9.62, lon: -20.08 },
+    f('Mare Tranquillitatis', 8.5, 31.4),
+    f('Mare Serenitatis', 28.0, 17.5),
+    f('Mare Imbrium', 32.8, -15.6),
+    f('Mare Crisium', 17.0, 59.1),
+    f('Mare Fecunditatis', -7.8, 51.3),
+    f('Mare Nectaris', -15.2, 35.5),
+    f('Mare Nubium', -21.3, -16.6),
+    f('Mare Humorum', -24.4, -38.6),
+    f('Mare Frigoris', 56.0, 1.4),
+    f('Mare Vaporum', 13.3, 3.6),
+    f('Oceanus Procellarum', 18.4, -57.4),
+    f('Mare Orientale', -19.4, -92.8),
+    f('Mare Moscoviense', 27.3, 147.9),
+    f('Tycho', -43.31, -11.36),
+    f('Copernicus', 9.62, -20.08),
+    f('Kepler', 8.1, -38.0),
+    f('Aristarchus', 23.7, -47.4),
+    f('Plato', 51.6, -9.4),
+    f('Clavius', -58.4, -14.4),
+    f('Grimaldi', -5.2, -68.6),
+    f('Langrenus', -8.9, 61.0),
+    f('Petavius', -25.3, 60.4),
+    f('Theophilus', -11.4, 26.4),
+    f('Ptolemaeus', -9.3, -1.9),
+    f('Archimedes', 29.7, -4.0),
+    f('Schickard', -44.4, -54.6),
+    f('Tsiolkovskiy', -20.4, 129.1),
+    f('South Pole–Aitken basin', -53.0, -169.0),
+    f('Montes Apenninus', 18.9, -3.7),
+    l('Apollo 11', 0.674, 23.473),
+    l('Apollo 12', -3.01, -23.42),
+    l('Apollo 14', -3.65, -17.47),
+    l('Apollo 15', 26.13, 3.63),
+    l('Apollo 16', -8.97, 15.5),
+    l('Apollo 17', 20.19, 30.77),
+    l('Luna 9', 7.08, -64.37),
+    l('Lunokhod 1', 38.24, -35.0),
+    l("Chang'e 3", 44.12, -19.51),
+    l("Chang'e 4", -45.44, 177.6),
   ],
 };

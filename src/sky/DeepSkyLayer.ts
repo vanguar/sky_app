@@ -7,6 +7,7 @@ import { SKY_RADIUS } from './types';
 
 const vertexShader = /* glsl */ `
   attribute float aCat;
+  attribute float aHidden;
   uniform float uPixelRatio;
   uniform float uVisible[6];
   uniform float uSize;
@@ -18,7 +19,7 @@ const vertexShader = /* glsl */ `
     float vis = 0.0;
     for (int i = 0; i < 6; i++) { if (i == idx) vis = uVisible[i]; }
     vCat = aCat;
-    gl_PointSize = vis > 0.5 ? uSize * uPixelRatio : 0.0;
+    gl_PointSize = vis > 0.5 && aHidden < 0.5 ? uSize * uPixelRatio : 0.0;
   }
 `;
 
@@ -112,6 +113,7 @@ export class DeepSkyLayer {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('aCat', new THREE.BufferAttribute(cat, 1));
+    geo.setAttribute('aHidden', new THREE.BufferAttribute(new Float32Array(n), 1));
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), SKY_RADIUS * 1.01);
     this.material = new THREE.ShaderMaterial({
       vertexShader,
@@ -136,6 +138,13 @@ export class DeepSkyLayer {
       isCategoryVisible(c, layers) ? 1 : 0,
     );
     this.object.visible = layers.galaxies || layers.nebulae || layers.clusters;
+  }
+
+  /** Per-object hide mask (1 = hidden), e.g. for the "Visible now" filter. */
+  setHidden(mask: Uint8Array | null): void {
+    const attr = this.object.geometry.getAttribute('aHidden') as THREE.BufferAttribute;
+    for (let i = 0; i < attr.count; i++) attr.setX(i, mask && mask[i] ? 1 : 0);
+    attr.needsUpdate = true;
   }
 
   update(fov: number, pixelRatio: number, daylight: number): void {

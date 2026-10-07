@@ -4,6 +4,7 @@ import type { Catalog } from '../catalog/types';
 import type { Layers } from '../store/sky-store';
 import { isCategoryVisible } from './DeepSkyLayer';
 import type { SolarRenderItem } from './types';
+import { pointPassesFilter, worldAltitudeDeg, type PracticalFilterState } from './practical-filter';
 
 /** Touch target radius in CSS px — intentionally larger than the drawn objects. */
 export const PICK_RADIUS_PX = 30;
@@ -15,6 +16,7 @@ export interface PickContext {
   height: number;
   layers: Layers;
   starMagLimit: number;
+  practical: PracticalFilterState;
 }
 
 /**
@@ -64,7 +66,7 @@ export class Picking {
 
     for (const b of this.bodies) {
       const on = b.id === 'sun' ? ctx.layers.sun : b.id === 'moon' ? ctx.layers.moon : ctx.layers.planets;
-      if (!on) continue;
+      if (!on || (ctx.practical.enabled && !b.practicalVisible)) continue;
       consider(b.id, this.screenDistance(b.eqj.x, b.eqj.y, b.eqj.z, tx, ty, ctx), 16);
     }
 
@@ -72,6 +74,7 @@ export class Picking {
       const e = this.messierEqj;
       this.catalog.messier.forEach((m, i) => {
         if (!isCategoryVisible(m.category, ctx.layers)) return;
+        if (ctx.practical.messierHidden?.[i]) return;
         consider(m.id, this.screenDistance(e[i * 3], e[i * 3 + 1], e[i * 3 + 2], tx, ty, ctx), 6);
       });
     }
@@ -83,6 +86,15 @@ export class Picking {
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         if (s.mag > limit) break; // catalog is sorted by magnitude
+        if (
+          ctx.practical.enabled &&
+          !pointPassesFilter(
+            ctx.practical,
+            s.mag,
+            worldAltitudeDeg(ctx.celestial, e[i * 3], e[i * 3 + 1], e[i * 3 + 2]),
+          )
+        )
+          continue;
         const d = this.screenDistance(e[i * 3], e[i * 3 + 1], e[i * 3 + 2], tx, ty, ctx);
         consider(starId(s.hip), d, Math.max(0, (4.5 - s.mag) * 3));
       }

@@ -37,3 +37,31 @@ export async function seedSettings(page: Page, overrides: Record<string, unknown
 export async function waitForSky(page: Page) {
   await page.getByTestId('sky-view').locator('canvas.sky-canvas').waitFor({ state: 'visible' });
 }
+
+/** Number of pixels whose channels differ by more than `threshold` (ignores rasteriser noise). */
+export async function pixelDiff(page: Page, a: Buffer, b: Buffer, threshold = 8): Promise<number> {
+  return page.evaluate(
+    async ([a64, b64, thr]) => {
+      const load = async (s: string) => {
+        const blob = await (await fetch(`data:image/png;base64,${s}`)).blob();
+        const bmp = await createImageBitmap(blob);
+        const c = new OffscreenCanvas(bmp.width, bmp.height);
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(bmp, 0, 0);
+        return ctx.getImageData(0, 0, bmp.width, bmp.height).data;
+      };
+      const [da, db] = await Promise.all([load(a64 as string), load(b64 as string)]);
+      let n = 0;
+      for (let i = 0; i < Math.min(da.length, db.length); i += 4) {
+        if (
+          Math.abs(da[i] - db[i]) > (thr as number) ||
+          Math.abs(da[i + 1] - db[i + 1]) > (thr as number) ||
+          Math.abs(da[i + 2] - db[i + 2]) > (thr as number)
+        )
+          n++;
+      }
+      return n;
+    },
+    [a.toString('base64'), b.toString('base64'), threshold] as const,
+  );
+}

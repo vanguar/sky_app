@@ -46,17 +46,28 @@ export class SkyScene {
     this.celestial.updateMatrixWorld(true);
   }
 
-  setSolarItems(items: SolarRenderItem[]): void {
-    this.planets.setItems(items);
-    this.sunMoon.setItems(items);
+  private practicalOnly = false;
+  private lastLayers: Layers | null = null;
+
+  setSolarItems(items: SolarRenderItem[], practicalOnly = this.practicalOnly): void {
+    this.practicalOnly = practicalOnly;
+    this.planets.setItems(items, practicalOnly);
+    this.sunMoon.setItems(items, practicalOnly);
+    if (this.lastLayers) this.applyLayers(this.lastLayers);
   }
 
+  /** Constellation figures are hidden when the sky is too bright to trace them. */
+  constellationsHiddenByFilter = false;
+
   applyLayers(layers: Layers): void {
+    this.lastLayers = layers;
     if (this.stars) this.stars.object.visible = layers.stars;
     this.planets.object.visible = layers.planets;
-    this.sunMoon.sun.visible = layers.sun;
-    this.sunMoon.moon.visible = layers.moon;
+    this.sunMoon.sun.visible = layers.sun && !this.sunMoon.filteredSun;
+    this.sunMoon.moon.visible = layers.moon && !this.sunMoon.filteredMoon;
     this.constellations?.applyLayers(layers);
+    if (this.constellations && this.constellationsHiddenByFilter) this.constellations.group.visible = false;
+    else if (this.constellations) this.constellations.group.visible = true;
     this.deepSky?.applyLayers(layers);
     this.horizon.setGridVisible(layers.grid);
   }

@@ -11,6 +11,8 @@ export interface SolarRenderItem {
   magnitude: number | null;
   angularDiameterDeg: number;
   illuminatedFraction: number | null;
+  /** Practically visible to the naked eye now (used by the "Visible now" filter). */
+  practicalVisible: boolean;
 }
 
 export interface TargetScreenInfo {

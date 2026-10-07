@@ -6,9 +6,9 @@
  * formula: Euler(beta, alpha, −gamma, 'YXZ') · Rx(−90°) · Rz(−screenAngle).
  * The back camera of the device (device −Z) then points along the camera's −Z.
  */
-import { DEG, angleDelta, normalizeDegrees } from '../astronomy/coordinate-transform';
-import { multiplyQuat, normalizeQuat, setAxisAngle } from './quaternion';
-import type { HeadingQuality, Quat, RawOrientationSample } from './types';
+import { DEG, RAD, normalizeDegrees } from '../astronomy/coordinate-transform';
+import { multiplyQuat, normalizeQuat, rotateVector, setAxisAngle } from './quaternion';
+import type { Quat } from './types';
 
 const SQRT_HALF = Math.SQRT1_2;
 const scratchScreen: Quat = { x: 0, y: 0, z: 0, w: 1 };
@@ -47,58 +47,34 @@ export function normalizeScreenAngle(angle: number | null | undefined): number {
   return normalizeDegrees(Math.round(angle / 90) * 90);
 }
 
+/** Which device axis a heading refers to. */
+export type HeadingAxis = 'back' | 'top';
+
+const tmpVec = { x: 0, y: 0, z: 0 };
+
 /**
- * Turns possibly-relative alpha values into north-referenced ones.
- *  - absolute events (Android `deviceorientationabsolute`) are used directly;
- *  - iOS provides `webkitCompassHeading`: we low-pass an offset between it and the relative alpha;
- *  - otherwise alpha stays relative and the UI asks the user to calibrate.
+ * Azimuth (deg, from north through east) of a device axis for a *device* quaternion
+ * (screenAngle = 0, so camera −Z = back of the phone, camera +Y = top edge).
+ * Returns null when the axis is (nearly) vertical and the azimuth is undefined.
  */
-export class HeadingResolver {
-  private offset = 0;
-  private hasOffset = false;
-  private quality: HeadingQuality = 'relative';
+export function axisAzimuth(q: Quat, axis: HeadingAxis, minHorizontal = 0.15): number | null {
+  if (axis === 'back') rotateVector(q, 0, 0, -1, tmpVec);
+  else rotateVector(q, 0, 1, 0, tmpVec);
+  const horizontal = Math.hypot(tmpVec.x, tmpVec.z);
+  if (horizontal < minHorizontal) return null;
+  return normalizeDegrees(Math.atan2(tmpVec.x, -tmpVec.z) * RAD);
+}
 
-  /** Max acceptable iOS compass accuracy (degrees). */
-  static readonly MAX_COMPASS_ERROR = 35;
-  /** Low-pass factor for compass offset updates (0…1). */
-  static readonly OFFSET_GAIN = 0.05;
+/** Horizontal share of the back axis (1 = phone upright, 0 = phone flat). */
+export function backAxisHorizontal(q: Quat): number {
+  rotateVector(q, 0, 0, -1, tmpVec);
+  return Math.hypot(tmpVec.x, tmpVec.z);
+}
 
-  resolve(sample: RawOrientationSample): number {
-    if (sample.absolute) {
-      this.quality = 'absolute';
-      return normalizeDegrees(sample.alpha);
-    }
-    const heading = sample.compassHeading;
-    const accuracy = sample.compassAccuracy;
-    const compassUsable =
-      heading != null &&
-      Number.isFinite(heading) &&
-      (accuracy == null || (accuracy >= 0 && accuracy <= HeadingResolver.MAX_COMPASS_ERROR));
-    if (compassUsable) {
-      const measured = normalizeDegrees(360 - heading - sample.alpha);
-      if (!this.hasOffset) {
-        this.offset = measured;
-        this.hasOffset = true;
-      } else {
-        // Circular low-pass suppresses magnetometer noise and sudden glitches.
-        this.offset = normalizeDegrees(
-          this.offset + HeadingResolver.OFFSET_GAIN * angleDelta(this.offset, measured),
-        );
-      }
-      this.quality = 'compass';
-    } else if (!this.hasOffset) {
-      this.quality = 'relative';
-    }
-    return normalizeDegrees(sample.alpha + (this.hasOffset ? this.offset : 0));
-  }
-
-  getQuality(): HeadingQuality {
-    return this.quality;
-  }
-
-  reset(): void {
-    this.offset = 0;
-    this.hasOffset = false;
-    this.quality = 'relative';
-  }
+/**
+ * Axis best suited to compare two estimates of the same orientation: the back camera axis unless
+ * the phone lies (nearly) flat, then the top edge. Both quaternions must use the same axis.
+ */
+export function referenceAxis(q: Quat): HeadingAxis {
+  return backAxisHorizontal(q) >= 0.5 ? 'back' : 'top';
 }

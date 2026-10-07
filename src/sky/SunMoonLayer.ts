@@ -94,7 +94,11 @@ export class SunMoonLayer {
     }
   }
 
-  setItems(items: SolarRenderItem[]): void {
+  /** Objects hidden by the "Visible now" filter. */
+  filteredSun = false;
+  filteredMoon = false;
+
+  setItems(items: SolarRenderItem[], practicalOnly = false): void {
     const r = SKY_RADIUS * 0.985;
     for (const it of items) {
       const target = it.id === 'sun' ? this.sun : it.id === 'moon' ? this.moon : null;
@@ -102,6 +106,9 @@ export class SunMoonLayer {
       const pos = target.geometry.getAttribute('position') as THREE.BufferAttribute;
       pos.setXYZ(0, it.eqj.x * r, it.eqj.y * r, it.eqj.z * r);
       pos.needsUpdate = true;
+      const filtered = practicalOnly && !it.practicalVisible;
+      if (it.id === 'sun') this.filteredSun = filtered;
+      else this.filteredMoon = filtered;
       if (it.id === 'sun') this.sunDiam = it.angularDiameterDeg;
       else {
         this.moonDiam = it.angularDiameterDeg;

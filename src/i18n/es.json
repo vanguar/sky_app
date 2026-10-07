@@ -81,7 +81,8 @@
     "stars": "Estrellas",
     "constellations": "Constelaciones",
     "deepSky": "Cielo profundo",
-    "layers": "Capas"
+    "layers": "Capas",
+    "visibleNow": "Visible ahora"
   },
   "layers": {
     "title": "Capas del cielo",
@@ -119,7 +120,12 @@
     "insecure": "Los sensores necesitan una conexión segura (HTTPS). Usa el mapa manualmente.",
     "noData": "No se reciben datos de los sensores. Usa el mapa manualmente.",
     "relativeHeading": "La brújula no está disponible: la vista puede estar girada. Calibra en Ajustes.",
-    "compassHint": "Si las direcciones parecen incorrectas, mueve el teléfono en forma de ocho para calibrar la brújula."
+    "compassHint": "Si las direcciones parecen incorrectas, mueve el teléfono en forma de ocho para calibrar la brújula.",
+    "calibrating": "Calibrando la brújula…",
+    "ready": "Apuntado listo",
+    "needsCalibration": "La brújula necesita calibración: las direcciones pueden estar desviadas.",
+    "uncalibrated": "La brújula no da referencia del norte: calibra con un objeto conocido.",
+    "calibrateAction": "Calibrar"
   },
   "search": {
     "title": "Buscar",
@@ -371,5 +377,23 @@
     "M82": "Galaxia del Cigarro",
     "M101": "Galaxia del Molinete",
     "M104": "Galaxia del Sombrero"
+  },
+  "practical": {
+    "visible": "Bien visible",
+    "difficult": "Difícil",
+    "notPractical": "Prácticamente no visible",
+    "belowHorizon": "Bajo el horizonte",
+    "label": "A simple vista",
+    "note": "Estimación para cielo despejado con contaminación lumínica moderada; no se tiene en cuenta el tiempo.",
+    "reasons": {
+      "belowHorizon": "{{name}} está bajo el horizonte.",
+      "lowAltitude": "{{name}} está solo a {{alt}}° sobre el horizonte.",
+      "daylight": "El cielo está demasiado claro (de día).",
+      "twilight": "El cielo aún está demasiado claro (crepúsculo).",
+      "tooFaint": "Demasiado débil para verlo a simple vista en estas condiciones.",
+      "faint": "Débil: necesita un cielo oscuro lejos de las luces de la ciudad.",
+      "clear": "Fácil de ver a simple vista con el cielo despejado.",
+      "sun": "Nunca mires al Sol sin un filtro solar adecuado."
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { seedSettings, waitForSky } from './helpers';
+import { magneticDeclination } from '../src/astronomy/geomagnetism';
+import { pixelDiff, seedSettings, waitForSky } from './helpers';
 
 test.describe('first run', () => {
   test('onboarding → manual location → sky map', async ({ page }) => {
@@ -116,6 +117,39 @@ test.describe('sky map', () => {
     await expect(page.getByTestId('planet-3d')).toBeHidden();
   });
 
+  test('3D globe auto-rotates and the toggle stops it', async ({ page }) => {
+    await page.goto('./#/object/mars');
+    await page.getByTestId('details-3d').click();
+    const canvas = page.getByTestId('planet-3d').locator('canvas');
+    await expect(canvas).toBeVisible();
+    await page.waitForTimeout(1500); // texture load
+    const a = await canvas.screenshot();
+    await page.waitForTimeout(1200);
+    const b = await canvas.screenshot();
+    expect(await pixelDiff(page, a, b)).toBeGreaterThan(500);
+    await page.getByRole('button', { name: 'Auto-rotate' }).click();
+    await page.waitForTimeout(600); // let damping settle
+    const c = await canvas.screenshot();
+    await page.waitForTimeout(1000);
+    const d = await canvas.screenshot();
+    expect(await pixelDiff(page, c, d)).toBeLessThan(50);
+  });
+
+  test('"Visible now" filter and practical visibility in the card', async ({ page }) => {
+    const toggle = page.getByTestId('filter-visible-now');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await page.goto('./#/object/saturn');
+    const card = page.getByTestId('object-details');
+    await expect(card.getByTestId('details-practical-status')).toHaveText(
+      /^(Visible|Difficult|Not practically visible|Below horizon)$/,
+    );
+    await expect(card.getByTestId('details-practical-reason')).not.toBeEmpty();
+    await page.reload();
+    await expect(page.getByTestId('filter-visible-now')).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('changes location manually from the top bar', async ({ page }) => {
     await page.getByTestId('location-chip').click();
     await page.getByTestId('enter-manually').click();
@@ -156,8 +190,20 @@ test.describe('phone pointing (mocked sensors)', () => {
     });
     await page.getByTestId('toggle-sensor').click();
     await expect(page.getByTestId('toggle-sensor')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('.crosshair-readout')).toContainText('E 90°', { timeout: 8000 });
+    // Absolute (magnetic) east + WMM magnetic declination for the seeded location = true azimuth.
+    const expected = 90 + magneticDeclination(50.45, 30.52, 0, new Date());
+    await expect
+      .poll(
+        async () => {
+          const text = (await page.locator('.crosshair-readout').textContent()) ?? '';
+          const az = Number(/(\d+)°\s*$/.exec(text.trim())?.[1]);
+          return Math.abs(az - expected);
+        },
+        { timeout: 8000 },
+      )
+      .toBeLessThanOrEqual(1);
     await expect(page.locator('.crosshair-readout')).toContainText('0°');
+    await expect(page.getByTestId('sensor-status')).toBeVisible();
     await page.waitForTimeout(3500); // past the no-data watchdog
     await expect(page.getByTestId('toggle-sensor')).toHaveAttribute('aria-pressed', 'true');
   });

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { raDecToVector } from '../astronomy/coordinate-transform';
 import { bvToRgb } from '../catalog/stars/stars';
 import type { StarCatalog } from '../catalog/types';
+import { EXTINCTION_K, LOW_ALTITUDE_DEG, VISIBLE_MARGIN } from '../astronomy/naked-eye';
 import { SKY_RADIUS } from './types';
 
 const vertexShader = /* glsl */ `
@@ -11,8 +12,18 @@ const vertexShader = /* glsl */ `
   uniform float uMagLimit;
   uniform float uSizeScale;
   uniform float uFade;
+  uniform float uVisibleNow;
+  uniform float uSkyLimit;
   varying vec3 vColor;
   varying float vAlpha;
+  // Mirrors practicalVisibility() in astronomy/naked-eye.ts for point sources.
+  bool practicallyVisible(vec3 worldPos) {
+    float altDeg = degrees(asin(clamp(worldPos.y / length(worldPos), -1.0, 1.0)));
+    if (altDeg < ${LOW_ALTITUDE_DEG.toFixed(1)}) return false;
+    float x = 1.0 / (sin(radians(altDeg)) + 0.50572 * pow(altDeg + 6.07995, -1.6364));
+    float effective = aMag + ${EXTINCTION_K.toFixed(3)} * x;
+    return uSkyLimit - effective >= ${VISIBLE_MARGIN.toFixed(1)};
+  }
   void main() {
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mv;
@@ -20,7 +31,8 @@ const vertexShader = /* glsl */ `
     float size = clamp(2.3 + rel * 1.2, 2.0, 15.0) * uSizeScale;
     vAlpha = clamp(rel * 0.6 + 0.45, 0.0, 1.0) * uFade;
     vColor = aColor;
-    gl_PointSize = rel < -0.5 ? 0.0 : size * uPixelRatio;
+    bool hidden = uVisibleNow > 0.5 && !practicallyVisible((modelMatrix * vec4(position, 1.0)).xyz);
+    gl_PointSize = rel < -0.5 || hidden ? 0.0 : size * uPixelRatio;
   }
 `;
 
@@ -79,6 +91,8 @@ export class StarLayer {
         uMagLimit: { value: 5.5 },
         uSizeScale: { value: 1 },
         uFade: { value: 1 },
+        uVisibleNow: { value: 0 },
+        uSkyLimit: { value: 5.5 },
       },
       transparent: true,
       depthTest: false,
@@ -102,6 +116,11 @@ export class StarLayer {
     u.uMagLimit.value = StarLayer.magnitudeLimit(fov, daylight);
     u.uSizeScale.value = Math.min(1.6, Math.max(0.85, Math.pow(60 / fov, 0.25)));
     u.uFade.value = (1 - 0.85 * daylight) * (0.55 + 0.45 * brightness);
+  }
+
+  setPracticalFilter(enabled: boolean, skyLimit: number): void {
+    this.material.uniforms.uVisibleNow.value = enabled ? 1 : 0;
+    this.material.uniforms.uSkyLimit.value = skyLimit;
   }
 
   dispose(): void {

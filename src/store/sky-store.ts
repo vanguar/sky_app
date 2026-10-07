@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { PipelineHeadingStatus } from '../sensors/sensor-fusion';
 import type { HeadingQuality, SensorStatus } from '../sensors/types';
 import { createSafeStorage, isRecord, pickEnum } from './persistence';
 
@@ -73,16 +74,22 @@ export type ViewMode = 'free' | 'sensor';
 
 interface SkyState {
   layers: Layers;
+  /** "Visible now": show only objects practically visible to the naked eye. */
+  visibleNow: boolean;
   viewMode: ViewMode;
   sensorStatus: SensorStatus;
   headingQuality: HeadingQuality | null;
+  /** Compass stabilisation state while phone pointing is active. */
+  headingStatus: PipelineHeadingStatus | null;
   selectedId: string | null;
   navigationTargetId: string | null;
   setLayer(id: LayerId, on: boolean): void;
+  setVisibleNow(on: boolean): void;
   applyPreset(preset: FilterPreset): void;
   setViewMode(mode: ViewMode): void;
   setSensorStatus(status: SensorStatus): void;
   setHeadingQuality(q: HeadingQuality | null): void;
+  setHeadingStatus(s: PipelineHeadingStatus | null): void;
   select(id: string | null): void;
   startNavigation(id: string): void;
   stopNavigation(): void;
@@ -103,16 +110,20 @@ export const useSkyStore = create<SkyState>()(
   persist(
     (set) => ({
       layers: layersForPreset('all'),
+      visibleNow: false,
       viewMode: 'free',
       sensorStatus: 'idle',
       headingQuality: null,
+      headingStatus: null,
       selectedId: null,
       navigationTargetId: null,
+      setVisibleNow: (visibleNow) => set({ visibleNow }),
       setLayer: (id, on) => set((s) => ({ layers: { ...s.layers, [id]: on } })),
       applyPreset: (preset) => set((s) => ({ layers: { ...layersForPreset(preset), grid: s.layers.grid } })),
       setViewMode: (viewMode) => set({ viewMode }),
       setSensorStatus: (sensorStatus) => set({ sensorStatus }),
       setHeadingQuality: (headingQuality) => set({ headingQuality }),
+      setHeadingStatus: (headingStatus) => set({ headingStatus }),
       select: (selectedId) => set({ selectedId }),
       startNavigation: (id) => set({ navigationTargetId: id, selectedId: id }),
       stopNavigation: () => set({ navigationTargetId: null }),
@@ -120,11 +131,12 @@ export const useSkyStore = create<SkyState>()(
     {
       name: SKY_STORAGE_KEY,
       version: 1,
-      storage: createSafeStorage<{ layers: Layers; viewMode: ViewMode }>(),
-      partialize: (s) => ({ layers: s.layers, viewMode: s.viewMode }),
+      storage: createSafeStorage<{ layers: Layers; viewMode: ViewMode; visibleNow: boolean }>(),
+      partialize: (s) => ({ layers: s.layers, viewMode: s.viewMode, visibleNow: s.visibleNow }),
       merge: (persisted, current) => ({
         ...current,
         layers: sanitizeLayers(persisted),
+        visibleNow: isRecord(persisted) && persisted.visibleNow === true,
         // Sensor mode needs a fresh permission each session; start in free mode but remember intent.
         viewMode: isRecord(persisted)
           ? pickEnum(persisted.viewMode, ['free', 'sensor'] as const, 'free')

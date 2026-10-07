@@ -1,15 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { vectorToHorizontal } from '../astronomy/coordinate-transform';
 import { applyHeadingOffset, calibrateHeadingOffset } from './calibration';
-import {
-  HeadingResolver,
-  deviceOrientationToQuaternion,
-  normalizeScreenAngle,
-} from './orientation-normalizer';
+import { deviceOrientationToQuaternion, normalizeScreenAngle } from './orientation-normalizer';
 import { quat, quatAngle, rotateVector } from './quaternion';
-import { OrientationPipeline } from './sensor-fusion';
 import { QuaternionSmoother } from './smoothing';
-import type { Quat, RawOrientationSample } from './types';
+import type { Quat } from './types';
 
 /** Direction the back camera looks at (camera −Z) for an orientation. */
 function viewDirection(q: Quat) {
@@ -19,20 +14,6 @@ function viewDirection(q: Quat) {
 /** Camera "up" (+Y) direction. */
 function upDirection(q: Quat) {
   return rotateVector(q, 0, 1, 0, { x: 0, y: 0, z: 0 });
-}
-
-function sample(partial: Partial<RawOrientationSample>): RawOrientationSample {
-  return {
-    alpha: 0,
-    beta: 90,
-    gamma: 0,
-    absolute: true,
-    compassHeading: null,
-    compassAccuracy: null,
-    screenAngle: 0,
-    timestamp: 0,
-    ...partial,
-  };
 }
 
 describe('deviceOrientationToQuaternion', () => {
@@ -80,40 +61,6 @@ describe('deviceOrientationToQuaternion', () => {
   });
 });
 
-describe('HeadingResolver', () => {
-  it('passes absolute alpha through', () => {
-    const r = new HeadingResolver();
-    expect(r.resolve(sample({ alpha: 123, absolute: true }))).toBeCloseTo(123);
-    expect(r.getQuality()).toBe('absolute');
-  });
-
-  it('derives north from the iOS compass heading', () => {
-    const r = new HeadingResolver();
-    // Relative alpha 10°, but the compass says we face 90° (east) → absolute alpha should be 270.
-    const a = r.resolve(sample({ alpha: 10, absolute: false, compassHeading: 90, compassAccuracy: 10 }));
-    expect(a).toBeCloseTo(270);
-    expect(r.getQuality()).toBe('compass');
-    // Later relative rotation keeps the same offset.
-    expect(
-      r.resolve(sample({ alpha: 20, absolute: false, compassHeading: 80, compassAccuracy: 10 })),
-    ).toBeCloseTo(280);
-  });
-
-  it('ignores inaccurate compass readings', () => {
-    const r = new HeadingResolver();
-    r.resolve(sample({ alpha: 50, absolute: false, compassHeading: 0, compassAccuracy: 90 }));
-    expect(r.getQuality()).toBe('relative');
-  });
-
-  it('filters compass jitter', () => {
-    const r = new HeadingResolver();
-    r.resolve(sample({ alpha: 0, absolute: false, compassHeading: 0, compassAccuracy: 5 }));
-    // One glitchy 40° reading moves the offset by only a fraction.
-    const a = r.resolve(sample({ alpha: 0, absolute: false, compassHeading: 320, compassAccuracy: 5 }));
-    expect(Math.min(a, 360 - a)).toBeLessThan(3);
-  });
-});
-
 describe('smoothing & calibration', () => {
   it('snaps on first sample and converges afterwards', () => {
     const s = new QuaternionSmoother('medium');
@@ -149,16 +96,5 @@ describe('smoothing & calibration', () => {
     expect(calibrateHeadingOffset(0, 100, 110)).toBeCloseTo(10);
     expect(calibrateHeadingOffset(5, 350, 10)).toBeCloseTo(25);
     expect(calibrateHeadingOffset(170, 0, 30)).toBeCloseTo(-160);
-  });
-
-  it('runs the full pipeline', () => {
-    const p = new OrientationPipeline('low');
-    const out = quat();
-    expect(p.step(16, out)).toBe(false);
-    p.setHeadingOffset(-20);
-    p.ingest(sample({ alpha: 270, beta: 90, gamma: 0 }));
-    expect(p.step(16, out)).toBe(true);
-    expect(viewDirection(out).azimuth).toBeCloseTo(70, 4);
-    expect(p.getHeadingQuality()).toBe('absolute');
   });
 });

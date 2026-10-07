@@ -2,7 +2,9 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../../app/providers/PlatformProvider';
 import { Sheet } from '../../components/Sheet';
-import { objectName, objectTypeKey, resolveObject, targetOf } from '../../catalog/object-registry';
+import { objectName, objectTypeKey, resolveObject } from '../../catalog/object-registry';
+import { practicalVisibilityOf } from '../../catalog/practical';
+import { PRACTICAL_CLASS } from '../object-details/practical-ui';
 import type { LanguageCode } from '../../catalog/types';
 import { RESOURCES } from '../../i18n/languages';
 import { useCatalogStore } from '../../store/catalog-store';
@@ -35,7 +37,7 @@ export function SearchSheet() {
       .map((hit) => {
         const ref = resolveObject(hit.id, catalog);
         if (!ref) return null;
-        const vis = platform.astronomy.getVisibility(targetOf(ref), now, observer);
+        const vis = practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer);
         return { id: hit.id, name: objectName(ref, t, lang), type: t(objectTypeKey(ref)), vis };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
@@ -76,8 +78,8 @@ export function SearchSheet() {
               <span className="result-name">{r.name}</span>
               <span className="result-meta">
                 {r.type} ·{' '}
-                <span className={r.vis.aboveHorizon ? 'vis-up' : 'vis-down'}>
-                  {r.vis.aboveHorizon ? t('visibility.up') : t('visibility.down')}
+                <span className={PRACTICAL_CLASS[r.vis.status]} data-testid={`result-status-${r.id}`}>
+                  {t(`practical.${r.vis.status}`)}
                 </span>{' '}
                 <span dir="ltr">{formatDegrees(r.vis.altitude, i18n.language, 0)}</span>
               </span>
