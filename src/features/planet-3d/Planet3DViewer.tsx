@@ -11,6 +11,8 @@ import { latLonToSphere } from './globe-math';
 
 /** Bodies with a bundled public-domain map (see docs/DATA_SOURCES.md). */
 const PHOTO_MAPS: Partial<Record<SolarBodyId, string>> = {
+  mercury: 'mercury',
+  venus: 'venus',
   moon: 'moon',
   mars: 'mars',
   jupiter: 'jupiter',
@@ -355,7 +357,7 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
       </div>
       <footer className="viewer3d-bottom">
         <p className="muted small">
-          {t('planet3d.hint')} ·{' '}
+          {t('planet3d.hint')} · {body === 'venus' && status !== 'fallback' && <>{t('planet3d.radar')} · </>}
           {textureKind === 'photo' && status !== 'fallback' ? t('planet3d.photo') : t('planet3d.procedural')}
         </p>
         <div className="row-buttons">

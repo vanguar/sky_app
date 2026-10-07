@@ -254,10 +254,11 @@
     "loading": "Caricamento della mappa…",
     "textureError": "Impossibile caricare la mappa della superficie. Viene mostrato un globo semplificato.",
     "procedural": "Texture illustrativa",
-    "photo": "Mappa: NASA / USGS (pubblico dominio)",
+    "photo": "Mappa: NASA (pubblico dominio)",
     "close": "Chiudi la vista 3D",
     "hint": "Trascina per ruotare, pizzica per lo zoom",
-    "unsupported": "La vista 3D non è disponibile per questo oggetto."
+    "unsupported": "La vista 3D non è disponibile per questo oggetto.",
+    "radar": "Mappa radar della superficie sotto le nubi (Magellan)"
   },
   "settings": {
     "title": "Impostazioni",

@@ -26,7 +26,7 @@ const PALETTES: Partial<Record<SolarBodyId, { bands: RGB[]; turbulence: number; 
       [196, 166, 118],
       [226, 202, 156],
     ],
-    turbulence: 0.25,
+    turbulence: 0.12,
     seed: 6,
   },
   uranus: {
@@ -123,7 +123,7 @@ function crateredTexture(ctx: CanvasRenderingContext2D, w: number, h: number, se
   }
 }
 
-export function createProceduralTexture(body: SolarBodyId, width = 1024): HTMLCanvasElement {
+export function createProceduralTexture(body: SolarBodyId, width = 2048): HTMLCanvasElement {
   const w = width;
   const h = width / 2;
   const canvas = document.createElement('canvas');

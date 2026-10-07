@@ -64,7 +64,7 @@ export const BODY_DATA: Record<SolarBodyId, BodyPhysicalData> = {
     atmosphere: null,
     moons: { count: 0, asOf: '2025' },
     discovery: null,
-    globe: { texture: 'procedural' },
+    globe: { texture: 'photo' },
   },
   venus: {
     diameterKm: 12104,
@@ -77,7 +77,7 @@ export const BODY_DATA: Record<SolarBodyId, BodyPhysicalData> = {
     atmosphere: ['CO₂ 96.5%', 'N₂ 3.5%'],
     moons: { count: 0, asOf: '2025' },
     discovery: null,
-    globe: { texture: 'procedural' },
+    globe: { texture: 'photo' },
   },
   mars: {
     diameterKm: 6792,
@@ -175,6 +175,40 @@ const f = (name: string, lat: number, lon: number): Landmark => ({ name, lat, lo
 const l = (name: string, lat: number, lon: number): Landmark => ({ name, lat, lon, kind: 'landing' });
 
 export const LANDMARKS: Partial<Record<SolarBodyId, Landmark[]>> = {
+  mercury: [
+    f('Caloris Planitia', 31.0, 162.7),
+    f('Rembrandt', -33.2, 88.2),
+    f('Beethoven', -20.0, -124.0),
+    f('Tolstoj', -16.3, -163.5),
+    f('Rachmaninoff', 27.6, 57.6),
+    f('Raditladi', 27.3, 119.1),
+    f('Shakespeare', 45.7, -150.9),
+    f('Dostoevskij', -45.1, -176.4),
+    f('Homer', -1.0, -36.5),
+    f('Kuiper', -11.3, -31.5),
+    l('MESSENGER (impact)', 54.4, -149.9),
+  ],
+  venus: [
+    f('Maxwell Montes', 65.2, 3.3),
+    f('Ishtar Terra', 70.4, 27.5),
+    f('Lakshmi Planum', 68.6, -20.7),
+    f('Aphrodite Terra', -5.8, 104.8),
+    f('Beta Regio', 25.3, -77.2),
+    f('Alpha Regio', -22.0, 4.7),
+    f('Atla Regio', 9.2, -160.5),
+    f('Maat Mons', 0.5, -165.2),
+    l('Venera 7', -5.0, -9.0),
+    l('Venera 9', 31.7, -69.2),
+    l('Venera 13', -7.5, -56.5),
+    l('Vega 1', 7.2, 177.8),
+  ],
+  // Cloud features drift: positions refer to the Cassini map (December 2000), not to today's sky.
+  jupiter: [
+    f('Great Red Spot (2000)', -21.0, -48.9),
+    f('North Equatorial Belt', 14.4, 120),
+    f('Equatorial Zone', -0.5, 120),
+    f('South Equatorial Belt', -12.0, 120),
+  ],
   mars: [
     f('Olympus Mons', 18.65, -133.8),
     f('Ascraeus Mons', 11.92, -104.08),

@@ -254,10 +254,11 @@
     "loading": "Loading map…",
     "textureError": "The surface map could not be loaded. Showing a simplified globe.",
     "procedural": "Illustrative texture",
-    "photo": "Map: NASA / USGS (public domain)",
+    "photo": "Map: NASA (public domain)",
     "close": "Close 3D view",
     "hint": "Drag to rotate, pinch to zoom",
-    "unsupported": "3D view is not available for this object."
+    "unsupported": "3D view is not available for this object.",
+    "radar": "Radar map of the surface beneath the clouds (Magellan)"
   },
   "settings": {
     "title": "Settings",

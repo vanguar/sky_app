@@ -254,10 +254,11 @@
     "loading": "Karte wird geladen…",
     "textureError": "Die Oberflächenkarte konnte nicht geladen werden. Es wird ein vereinfachter Globus angezeigt.",
     "procedural": "Illustrative Textur",
-    "photo": "Karte: NASA / USGS (gemeinfrei)",
+    "photo": "Karte: NASA (gemeinfrei)",
     "close": "3D-Ansicht schließen",
     "hint": "Ziehen zum Drehen, zwei Finger zum Zoomen",
-    "unsupported": "Für dieses Objekt ist keine 3D-Ansicht verfügbar."
+    "unsupported": "Für dieses Objekt ist keine 3D-Ansicht verfügbar.",
+    "radar": "Radarkarte der Oberfläche unter den Wolken (Magellan)"
   },
   "settings": {
     "title": "Einstellungen",

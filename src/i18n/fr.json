@@ -254,10 +254,11 @@
     "loading": "Chargement de la carte…",
     "textureError": "La carte de surface n'a pas pu être chargée. Un globe simplifié est affiché.",
     "procedural": "Texture illustrative",
-    "photo": "Carte : NASA / USGS (domaine public)",
+    "photo": "Carte : NASA (domaine public)",
     "close": "Fermer la vue 3D",
     "hint": "Faites glisser pour tourner, pincez pour zoomer",
-    "unsupported": "La vue 3D n'est pas disponible pour cet objet."
+    "unsupported": "La vue 3D n'est pas disponible pour cet objet.",
+    "radar": "Carte radar de la surface sous les nuages (Magellan)"
   },
   "settings": {
     "title": "Réglages",
