@@ -1,0 +1,31 @@
+# Data sources & licenses
+
+AstroPoint ships only data and images whose licenses allow redistribution **and future commercial use**.
+Raw source files are kept in [`data/source/`](../data/source) and converted to the compact runtime catalogs in
+[`public/catalogs/`](../public/catalogs) by `npm run catalogs` ([`scripts/build-catalogs.mjs`](../scripts/build-catalogs.mjs)).
+
+| # | Name | URL | Data used | License | Attribution required | Commercial use | Notes |
+|---|------|-----|-----------|---------|----------------------|----------------|-------|
+| 1 | **Hipparcos Main Catalogue** (ESA 1997, CDS/VizieR `I/239/hip_main`) | https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239 | 8 789 stars with V < 6.5: HIP number, ICRS RA/Dec, V magnitude, B−V, parallax, spectral type, HD number | ESA/CDS data are freely available for use with acknowledgement (scientific catalog; factual data) | Yes — “Hipparcos catalogue, ESA (1997); VizieR, CDS Strasbourg” | Yes | Downloaded via VizieR ASU query (`Vmag<6.5`). Positions are epoch J1991.25 (proper motion not applied; error ≪ 1′ for display). Distances are shown only for parallax > 1 mas and labelled as derived from parallax. |
+| 2 | **d3-celestial** data (Olaf Frohn) | https://github.com/ofrohn/d3-celestial | Star proper names + Bayer/Flamsteed designations and translations (`starnames.json`), constellation names in many languages, stick-figure lines, IAU boundaries (`constellations*.json`), Messier list with types/magnitudes/sizes (`messier.json`) | BSD-3-Clause ([`data/source/d3-celestial/LICENSE`](../data/source/d3-celestial/LICENSE)) | Yes — keep copyright notice (see LICENSE file and in-app “About”) | Yes | Boundaries originate from the IAU (Delporte 1930 / VizieR VI/49). Only the data files are used, no code. Serpens Caput/Cauda merged into one IAU constellation. |
+| 3 | **Astronomy Engine** (Don Cross) | https://github.com/cosinekitty/astronomy | Positions of Sun, Moon, planets; precession/nutation; rise/set/transit; illumination; constellation lookup | MIT | Yes — keep license notice (bundled in `node_modules/astronomy-engine/LICENSE`) | Yes | npm dependency, not vendored. |
+| 4 | **NASA Planetary Fact Sheets** (NSSDCA, GSFC) | https://nssdc.gsfc.nasa.gov/planetary/factsheet/ | Diameter, mass, mean distance, orbital and rotation periods, mean temperature, atmosphere composition | Public domain (U.S. Government work) | Courtesy credit appreciated | Yes | Curated by hand into [`src/catalog/planets/planet-data.ts`](../src/catalog/planets/planet-data.ts). Moon counts carry an “as of” year and must be updated as discoveries are confirmed. |
+| 5 | **Moon map** “Moonmap from clementine data.png” (U.S. Naval Research Laboratory, Clementine mission) | https://commons.wikimedia.org/wiki/File:Moonmap_from_clementine_data.png | Equirectangular albedo map → `public/textures/planets/moon-{1k,2k}.jpg` | Public domain | No (credit given anyway) | Yes | Resized/re-encoded only. |
+| 6 | **Mars Viking MDIM 2.1 colour mosaic** (NASA / JPL / USGS) | https://commons.wikimedia.org/wiki/File:Mars_Viking_MDIM21_ClrMosaic_1km.jpg | Equirectangular colour map → `public/textures/planets/mars-{1k,2k}.jpg` | Public domain | No (credit given anyway) | Yes | Downscaled from the 1 km/px product. |
+| 7 | **Jupiter cylindrical map PIA07782** (NASA / JPL / Space Science Institute, Cassini) | https://photojournal.jpl.nasa.gov/catalog/PIA07782 | Equirectangular map → `public/textures/planets/jupiter-{1k,2k}.jpg` | Public domain | No (credit given anyway) | Yes | Resized/re-encoded only. |
+| 8 | **Messier distances** | NASA “Hubble’s Messier Catalog” (https://science.nasa.gov/mission/hubble/science/explore-the-night-sky/hubble-messier-catalog/) and SEDS Messier database | Rounded distances in light-years for the 110 objects | Facts (not copyrightable); NASA pages are public domain | No | Yes | Values are approximate literature values; published estimates vary, especially for galaxies. |
+| 9 | **IAU planetary nomenclature** | https://planetarynomenclature.usgs.gov/ | Names and coordinates of a few Moon/Mars landmarks | Public domain (USGS) | No | Yes | Factual names/coordinates. |
+| 10 | **AstroPoint originals** | this repository | Ukrainian constellation names, extra star-name translations (uk/de/fr), all UI texts in 8 languages, object descriptions, app icons, procedural textures (Saturn, Uranus, Neptune, Venus, Mercury, ring texture) | MIT (this repository) | — | Yes | Procedural textures are illustrative and labelled as such in the 3D viewer. |
+
+## Not used (deliberately)
+
+* **Stellarium** sky cultures / code — GPL; not used, no code copied.
+* **Solar System Scope** textures (CC BY 4.0) — download endpoint not reachable from the build environment; NASA public-domain maps used instead.
+* **HYG database** (CC BY-SA 4.0) — share-alike obligations on derived data; Hipparcos was used directly instead.
+* No images or UI assets with unclear licensing are included.
+
+## Attribution text (also shown in Settings → About)
+
+> Star data: Hipparcos catalogue, ESA (1997), via VizieR (CDS, Strasbourg). Constellation lines, boundaries, names and
+> Messier list: d3-celestial © Olaf Frohn (BSD-3-Clause). Ephemerides: Astronomy Engine © Don Cross (MIT).
+> Planetary data and maps: NASA, JPL, USGS, NRL (public domain).

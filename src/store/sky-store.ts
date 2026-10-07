@@ -1,0 +1,135 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { HeadingQuality, SensorStatus } from '../sensors/types';
+import { createSafeStorage, isRecord, pickEnum } from './persistence';
+
+export const LAYER_IDS = [
+  'sun',
+  'moon',
+  'planets',
+  'stars',
+  'zodiac',
+  'constellationLines',
+  'constellationNames',
+  'constellationBoundaries',
+  'galaxies',
+  'nebulae',
+  'clusters',
+  'grid',
+] as const;
+export type LayerId = (typeof LAYER_IDS)[number];
+export type Layers = Record<LayerId, boolean>;
+
+export const FILTER_PRESETS = ['all', 'planets', 'stars', 'constellations', 'deepSky'] as const;
+export type FilterPreset = (typeof FILTER_PRESETS)[number];
+
+const allOff = (): Layers => Object.fromEntries(LAYER_IDS.map((id) => [id, false])) as Layers;
+
+/** Layer sets behind the quick filter chips. */
+export function layersForPreset(preset: FilterPreset): Layers {
+  const l = allOff();
+  switch (preset) {
+    case 'all':
+      Object.assign(l, {
+        sun: true,
+        moon: true,
+        planets: true,
+        stars: true,
+        constellationLines: true,
+        constellationNames: true,
+        galaxies: true,
+        nebulae: true,
+        clusters: true,
+      });
+      break;
+    case 'planets':
+      l.planets = true;
+      break;
+    case 'stars':
+      l.stars = true;
+      break;
+    case 'constellations':
+      // Lines connect stars, so the star field stays visible.
+      Object.assign(l, { stars: true, constellationLines: true, constellationNames: true });
+      break;
+    case 'deepSky':
+      Object.assign(l, { galaxies: true, nebulae: true, clusters: true });
+      break;
+  }
+  return l;
+}
+
+/** Which preset (if any) exactly matches a layer set. */
+export function presetForLayers(layers: Layers): FilterPreset | 'custom' {
+  for (const p of FILTER_PRESETS) {
+    const ref = layersForPreset(p);
+    // The horizon grid is a viewing aid, independent of object filters.
+    if (LAYER_IDS.every((id) => id === 'grid' || ref[id] === layers[id])) return p;
+  }
+  return 'custom';
+}
+
+export type ViewMode = 'free' | 'sensor';
+
+interface SkyState {
+  layers: Layers;
+  viewMode: ViewMode;
+  sensorStatus: SensorStatus;
+  headingQuality: HeadingQuality | null;
+  selectedId: string | null;
+  navigationTargetId: string | null;
+  setLayer(id: LayerId, on: boolean): void;
+  applyPreset(preset: FilterPreset): void;
+  setViewMode(mode: ViewMode): void;
+  setSensorStatus(status: SensorStatus): void;
+  setHeadingQuality(q: HeadingQuality | null): void;
+  select(id: string | null): void;
+  startNavigation(id: string): void;
+  stopNavigation(): void;
+}
+
+export const SKY_STORAGE_KEY = 'astropoint.sky';
+
+export function sanitizeLayers(raw: unknown): Layers {
+  const defaults = layersForPreset('all');
+  if (!isRecord(raw) || !isRecord(raw.layers)) return defaults;
+  const src = raw.layers;
+  return Object.fromEntries(
+    LAYER_IDS.map((id) => [id, typeof src[id] === 'boolean' ? (src[id] as boolean) : defaults[id]]),
+  ) as Layers;
+}
+
+export const useSkyStore = create<SkyState>()(
+  persist(
+    (set) => ({
+      layers: layersForPreset('all'),
+      viewMode: 'free',
+      sensorStatus: 'idle',
+      headingQuality: null,
+      selectedId: null,
+      navigationTargetId: null,
+      setLayer: (id, on) => set((s) => ({ layers: { ...s.layers, [id]: on } })),
+      applyPreset: (preset) => set((s) => ({ layers: { ...layersForPreset(preset), grid: s.layers.grid } })),
+      setViewMode: (viewMode) => set({ viewMode }),
+      setSensorStatus: (sensorStatus) => set({ sensorStatus }),
+      setHeadingQuality: (headingQuality) => set({ headingQuality }),
+      select: (selectedId) => set({ selectedId }),
+      startNavigation: (id) => set({ navigationTargetId: id, selectedId: id }),
+      stopNavigation: () => set({ navigationTargetId: null }),
+    }),
+    {
+      name: SKY_STORAGE_KEY,
+      version: 1,
+      storage: createSafeStorage<{ layers: Layers; viewMode: ViewMode }>(),
+      partialize: (s) => ({ layers: s.layers, viewMode: s.viewMode }),
+      merge: (persisted, current) => ({
+        ...current,
+        layers: sanitizeLayers(persisted),
+        // Sensor mode needs a fresh permission each session; start in free mode but remember intent.
+        viewMode: isRecord(persisted)
+          ? pickEnum(persisted.viewMode, ['free', 'sensor'] as const, 'free')
+          : 'free',
+      }),
+    },
+  ),
+);
