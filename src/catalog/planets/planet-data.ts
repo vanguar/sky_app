@@ -174,7 +174,7 @@ export interface Landmark {
 const f = (name: string, lat: number, lon: number): Landmark => ({ name, lat, lon, kind: 'feature' });
 const l = (name: string, lat: number, lon: number): Landmark => ({ name, lat, lon, kind: 'landing' });
 
-export const LANDMARKS: Partial<Record<SolarBodyId, Landmark[]>> = {
+export const LANDMARKS: Partial<Record<GlobeId, Landmark[]>> = {
   mercury: [
     f('Caloris Planitia', 31.0, 162.7),
     f('Rembrandt', -33.2, 88.2),
@@ -201,6 +201,44 @@ export const LANDMARKS: Partial<Record<SolarBodyId, Landmark[]>> = {
     l('Venera 9', 31.7, -69.2),
     l('Venera 13', -7.5, -56.5),
     l('Vega 1', 7.2, 177.8),
+  ],
+  io: [
+    f('Pele', -18.7, 104.7),
+    f('Loki Patera', 13.0, 51.2),
+    f('Prometheus', -1.5, -153.0),
+    f('Tvashtar Paterae', 62.8, -124.0),
+    f('Ra Patera', -8.6, 34.7),
+    f('Masubi', -45.4, -54.4),
+  ],
+  europa: [
+    f('Pwyll', -25.2, 88.6),
+    f('Conamara Chaos', 9.7, 86.3),
+    f('Thera Macula', -46.7, -178.9),
+    f('Callanish', -16.7, 25.5),
+    f('Tyre', 33.6, -146.6),
+  ],
+  ganymede: [
+    f('Galileo Regio', 35.7, -144.4),
+    f('Gilgamesh', -62.6, -125.1),
+    f('Osiris', -38.1, -166.1),
+    f('Tros', 11.0, -27.9),
+    f('Uruk Sulcus', 0.0, -160.0),
+  ],
+  callisto: [
+    f('Valhalla', 14.7, -56.0),
+    f('Asgard', 32.2, -140.0),
+    f('Adlinda', -49.9, -31.7),
+    f('Bran', -24.4, -152.4),
+  ],
+  titan: [
+    f('Xanadu', -15.0, -100.0),
+    f('Kraken Mare', 68.0, 50.0),
+    f('Ligeia Mare', 79.0, 112.0),
+    f('Shangri-La', -10.0, -165.0),
+    f('Belet', -5.0, 105.0),
+    f('Menrva', 20.1, -87.2),
+    f('Selk (Dragonfly target)', 7.0, 161.0),
+    l('Huygens', -10.3, 167.7),
   ],
   // Cloud features drift: positions refer to the Cassini map (December 2000), not to today's sky.
   jupiter: [
@@ -281,3 +319,71 @@ export const LANDMARKS: Partial<Record<SolarBodyId, Landmark[]>> = {
     l("Chang'e 4", -45.44, 177.6),
   ],
 };
+
+/* ------------------------------------------------------------ satellites */
+
+export type MoonId = 'io' | 'europa' | 'ganymede' | 'callisto' | 'titan';
+/** Anything that can be shown in the 3D globe viewer. */
+export type GlobeId = SolarBodyId | MoonId;
+
+export const MOON_IDS: readonly MoonId[] = ['io', 'europa', 'ganymede', 'callisto', 'titan'];
+
+export interface SatelliteData {
+  parent: 'jupiter' | 'saturn';
+  diameterKm: number;
+  orbitalPeriodDays: number;
+  semiMajorAxisKm: number;
+  discovery: string;
+}
+
+/** NASA planetary satellite fact sheets (public domain). */
+export const SATELLITES: Record<MoonId, SatelliteData> = {
+  io: {
+    parent: 'jupiter',
+    diameterKm: 3643,
+    orbitalPeriodDays: 1.769,
+    semiMajorAxisKm: 421700,
+    discovery: 'Galileo Galilei, 1610',
+  },
+  europa: {
+    parent: 'jupiter',
+    diameterKm: 3122,
+    orbitalPeriodDays: 3.551,
+    semiMajorAxisKm: 671034,
+    discovery: 'Galileo Galilei, 1610',
+  },
+  ganymede: {
+    parent: 'jupiter',
+    diameterKm: 5268,
+    orbitalPeriodDays: 7.155,
+    semiMajorAxisKm: 1070412,
+    discovery: 'Galileo Galilei, 1610',
+  },
+  callisto: {
+    parent: 'jupiter',
+    diameterKm: 4821,
+    orbitalPeriodDays: 16.689,
+    semiMajorAxisKm: 1882709,
+    discovery: 'Galileo Galilei, 1610',
+  },
+  titan: {
+    parent: 'saturn',
+    diameterKm: 5150,
+    orbitalPeriodDays: 15.945,
+    semiMajorAxisKm: 1221870,
+    discovery: 'Christiaan Huygens, 1655',
+  },
+};
+
+export const MOONS_OF: Partial<Record<SolarBodyId, MoonId[]>> = {
+  jupiter: ['io', 'europa', 'ganymede', 'callisto'],
+  saturn: ['titan'],
+};
+
+export function isMoonId(id: string): id is MoonId {
+  return (MOON_IDS as readonly string[]).includes(id);
+}
+
+export function hasGlobe(id: GlobeId): boolean {
+  return isMoonId(id) || !!BODY_DATA[id].globe;
+}

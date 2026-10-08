@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SolarBodyId } from '../astronomy/types';
+import type { GlobeId } from '../catalog/planets/planet-data';
 
 export type Panel = 'none' | 'menu' | 'search' | 'layers' | 'settings' | 'location' | 'details';
 
@@ -15,11 +15,11 @@ export interface Toast {
 
 interface UiState {
   panel: Panel;
-  viewer3d: SolarBodyId | null;
+  viewer3d: GlobeId | null;
   toasts: Toast[];
   openPanel(panel: Panel): void;
   closePanel(): void;
-  open3d(body: SolarBodyId): void;
+  open3d(body: GlobeId): void;
   close3d(): void;
   pushToast(t: Omit<Toast, 'id' | 'durationMs'> & { durationMs?: number }): number;
   dismissToast(id: number): void;

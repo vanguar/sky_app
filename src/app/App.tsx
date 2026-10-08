@@ -4,6 +4,7 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Toasts } from '../components/Toasts';
 import { objectName, resolveObject } from '../catalog/object-registry';
 import type { LanguageCode } from '../catalog/types';
+import { isMoonId } from '../catalog/planets/planet-data';
 import { FilterBar } from '../features/filters/FilterBar';
 import { LayersSheet } from '../features/filters/LayersSheet';
 import { Navigator } from '../features/navigator/Navigator';
@@ -83,7 +84,14 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
     if (routeReady.current) replaceHash({ objectId: selectedId });
   }, [selectedId, catalog]);
 
-  const viewerRef = viewer3d ? resolveObject(viewer3d, catalog) : null;
+  const viewerRef = viewer3d && !isMoonId(viewer3d) ? resolveObject(viewer3d, catalog) : null;
+  const viewerName = !viewer3d
+    ? null
+    : isMoonId(viewer3d)
+      ? t(`moons.${viewer3d}`)
+      : viewerRef
+        ? objectName(viewerRef, t, i18n.language as LanguageCode)
+        : null;
 
   return (
     <div className={`app ${nightMode ? 'night' : ''}`}>
@@ -121,14 +129,10 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
         <LocationSheet />
       </ErrorBoundary>
 
-      {viewer3d && viewerRef && (
+      {viewer3d && viewerName && (
         <ErrorBoundary>
           <Suspense fallback={<div className="viewer3d loading">{t('common.loading')}</div>}>
-            <Planet3DViewer
-              body={viewer3d}
-              name={objectName(viewerRef, t, i18n.language as LanguageCode)}
-              onClose={close3d}
-            />
+            <Planet3DViewer body={viewer3d} name={viewerName} onClose={close3d} />
           </Suspense>
         </ErrorBoundary>
       )}

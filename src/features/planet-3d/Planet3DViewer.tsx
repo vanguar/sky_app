@@ -2,15 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { SolarBodyId } from '../../astronomy/types';
 import { Icon } from '../../components/Icon';
-import { BODY_DATA, LANDMARKS } from '../../catalog/planets/planet-data';
+import { LANDMARKS, SATELLITES, hasGlobe, isMoonId, type GlobeId } from '../../catalog/planets/planet-data';
+import { formatNumber } from '../../utils/format';
 import { assetUrl } from '../../utils/asset-url';
 import { createProceduralTexture, createRingTexture } from './procedural-textures';
 import { latLonToSphere } from './globe-math';
 
 /** Bodies with a bundled public-domain map (see docs/DATA_SOURCES.md). */
-const PHOTO_MAPS: Partial<Record<SolarBodyId, string>> = {
+const PHOTO_MAPS: Partial<Record<GlobeId, string>> = {
+  io: 'io',
+  europa: 'europa',
+  ganymede: 'ganymede',
+  callisto: 'callisto',
+  titan: 'titan',
   mercury: 'mercury',
   venus: 'venus',
   moon: 'moon',
@@ -19,7 +24,7 @@ const PHOTO_MAPS: Partial<Record<SolarBodyId, string>> = {
 };
 
 /** Relief (elevation) maps available as bump maps. */
-const BUMP_MAPS = new Set<SolarBodyId>(['moon']);
+const BUMP_MAPS = new Set<GlobeId>(['moon']);
 const BUMP_SCALE = 2.5;
 /** Load 4K maps once the camera is this much closer than the initial framing. */
 const HD_ZOOM_FACTOR = 0.7;
@@ -28,7 +33,7 @@ const HD_ZOOM_FACTOR = 0.7;
 const AUTO_ROTATE_RAD_PER_SEC = (2 * Math.PI) / 30;
 
 /** Axial tilt (degrees) for a natural-looking globe. */
-const AXIAL_TILT: Partial<Record<SolarBodyId, number>> = {
+const AXIAL_TILT: Partial<Record<GlobeId, number>> = {
   mars: 25.2,
   jupiter: 3.1,
   saturn: 26.7,
@@ -44,14 +49,14 @@ function preferSmallTextures(): boolean {
 }
 
 interface Props {
-  body: SolarBodyId;
+  body: GlobeId;
   name: string;
   onClose(): void;
 }
 
 /** Reusable 3D globe viewer: rotate, pinch-zoom, reset, optional auto-rotation and landmarks. */
 export default function Planet3DViewer({ body, name, onClose }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const hostRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -320,7 +325,8 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  if (!BODY_DATA[body].globe) return null;
+  if (!hasGlobe(body)) return null;
+  const sat = isMoonId(body) ? SATELLITES[body] : null;
 
   return (
     <div
@@ -339,7 +345,18 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
         ))}
       </div>
       <header className="viewer3d-top">
-        <h2>{t('planet3d.title', { name })}</h2>
+        <div>
+          <h2>{t('planet3d.title', { name })}</h2>
+          {sat && (
+            <p className="muted small viewer3d-facts" data-testid="moon-facts">
+              {t('planet3d.moonFacts', {
+                diameter: formatNumber(sat.diameterKm, i18n.language, 0),
+                period: formatNumber(sat.orbitalPeriodDays, i18n.language, 2),
+                discovery: sat.discovery,
+              })}
+            </p>
+          )}
+        </div>
         <button
           type="button"
           className="icon-btn glass"
@@ -358,6 +375,7 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
       <footer className="viewer3d-bottom">
         <p className="muted small">
           {t('planet3d.hint')} · {body === 'venus' && status !== 'fallback' && <>{t('planet3d.radar')} · </>}
+          {body === 'titan' && status !== 'fallback' && <>{t('planet3d.titanHaze')} · </>}
           {textureKind === 'photo' && status !== 'fallback' ? t('planet3d.photo') : t('planet3d.procedural')}
         </p>
         <div className="row-buttons">

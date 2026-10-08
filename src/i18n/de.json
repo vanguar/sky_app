@@ -211,7 +211,8 @@
     "show": "Auf der Karte zeigen",
     "noBrief": "Die wichtigsten Daten findest du unter Details.",
     "zodiacNote": "Eines der 12 Tierkreissternbilder auf der Ekliptik.",
-    "openDetails": "Details zu {{name}}"
+    "openDetails": "Details zu {{name}}",
+    "moons3d": "Monde in 3D"
   },
   "units": {
     "km": "{{value}} km",
@@ -258,7 +259,9 @@
     "close": "3D-Ansicht schließen",
     "hint": "Ziehen zum Drehen, zwei Finger zum Zoomen",
     "unsupported": "Für dieses Objekt ist keine 3D-Ansicht verfügbar.",
-    "radar": "Radarkarte der Oberfläche unter den Wolken (Magellan)"
+    "radar": "Radarkarte der Oberfläche unter den Wolken (Magellan)",
+    "moonFacts": "Durchmesser {{diameter}} km · Umlauf {{period}} Tage · entdeckt von {{discovery}}",
+    "titanHaze": "Oberfläche unter dem Dunst (Cassini, Infrarot)"
   },
   "settings": {
     "title": "Einstellungen",
@@ -396,5 +399,12 @@
       "clear": "Bei klarem Himmel mit bloßem Auge leicht zu sehen.",
       "sun": "Schau nie ohne geeigneten Sonnenfilter in die Sonne."
     }
+  },
+  "moons": {
+    "io": "Io",
+    "europa": "Europa",
+    "ganymede": "Ganymed",
+    "callisto": "Kallisto",
+    "titan": "Titan"
   }
 }

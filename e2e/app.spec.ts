@@ -150,6 +150,20 @@ test.describe('sky map', () => {
     await expect(page.getByTestId('filter-visible-now')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('opens Galilean moons and Titan in 3D from the planet cards', async ({ page }) => {
+    await page.goto('./#/object/jupiter');
+    await expect(page.getByTestId('moons-3d')).toBeVisible();
+    await page.getByTestId('moon-3d-io').click();
+    const viewer = page.getByTestId('planet-3d');
+    await expect(viewer).toBeVisible();
+    await expect(viewer.getByRole('heading', { name: 'Io in 3D' })).toBeVisible();
+    await expect(viewer.getByTestId('moon-facts')).toContainText('3,643');
+    await page.getByTestId('close-3d').click();
+    await page.goto('./#/object/saturn');
+    await page.getByTestId('moon-3d-titan').click();
+    await expect(page.getByTestId('planet-3d').getByRole('heading', { name: 'Titan in 3D' })).toBeVisible();
+  });
+
   test('changes location manually from the top bar', async ({ page }) => {
     await page.getByTestId('location-chip').click();
     await page.getByTestId('enter-manually').click();

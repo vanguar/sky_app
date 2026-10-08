@@ -211,7 +211,8 @@
     "show": "Show on map",
     "noBrief": "Key facts are listed in Details.",
     "zodiacNote": "One of the 12 zodiac constellations on the ecliptic.",
-    "openDetails": "Details of {{name}}"
+    "openDetails": "Details of {{name}}",
+    "moons3d": "Moons in 3D"
   },
   "units": {
     "km": "{{value}} km",
@@ -258,7 +259,9 @@
     "close": "Close 3D view",
     "hint": "Drag to rotate, pinch to zoom",
     "unsupported": "3D view is not available for this object.",
-    "radar": "Radar map of the surface beneath the clouds (Magellan)"
+    "radar": "Radar map of the surface beneath the clouds (Magellan)",
+    "moonFacts": "Diameter {{diameter}} km · orbit {{period}} days · discovered by {{discovery}}",
+    "titanHaze": "Surface beneath the haze (Cassini, infrared)"
   },
   "settings": {
     "title": "Settings",
@@ -396,5 +399,12 @@
       "clear": "Easy to see with the naked eye in a clear sky.",
       "sun": "Never look at the Sun without a proper solar filter."
     }
+  },
+  "moons": {
+    "io": "Io",
+    "europa": "Europa",
+    "ganymede": "Ganymede",
+    "callisto": "Callisto",
+    "titan": "Titan"
   }
 }

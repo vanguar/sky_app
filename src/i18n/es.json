@@ -211,7 +211,8 @@
     "show": "Mostrar en el mapa",
     "noBrief": "Los datos principales están en Detalles.",
     "zodiacNote": "Una de las 12 constelaciones del zodiaco sobre la eclíptica.",
-    "openDetails": "Detalles de {{name}}"
+    "openDetails": "Detalles de {{name}}",
+    "moons3d": "Lunas en 3D"
   },
   "units": {
     "km": "{{value}} km",
@@ -258,7 +259,9 @@
     "close": "Cerrar vista 3D",
     "hint": "Arrastra para girar, pellizca para hacer zoom",
     "unsupported": "La vista 3D no está disponible para este objeto.",
-    "radar": "Mapa de radar de la superficie bajo las nubes (Magellan)"
+    "radar": "Mapa de radar de la superficie bajo las nubes (Magellan)",
+    "moonFacts": "Diámetro {{diameter}} km · órbita {{period}} días · descubierta por {{discovery}}",
+    "titanHaze": "Superficie bajo la bruma (Cassini, infrarrojo)"
   },
   "settings": {
     "title": "Ajustes",
@@ -396,5 +399,12 @@
       "clear": "Fácil de ver a simple vista con el cielo despejado.",
       "sun": "Nunca mires al Sol sin un filtro solar adecuado."
     }
+  },
+  "moons": {
+    "io": "Ío",
+    "europa": "Europa",
+    "ganymede": "Ganímedes",
+    "callisto": "Calisto",
+    "titan": "Titán"
   }
 }

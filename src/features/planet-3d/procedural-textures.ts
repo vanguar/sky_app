@@ -1,4 +1,5 @@
 import type { SolarBodyId } from '../../astronomy/types';
+import type { GlobeId } from '../../catalog/planets/planet-data';
 
 /**
  * Original, procedurally generated illustrative textures for bodies without a bundled
@@ -123,14 +124,14 @@ function crateredTexture(ctx: CanvasRenderingContext2D, w: number, h: number, se
   }
 }
 
-export function createProceduralTexture(body: SolarBodyId, width = 2048): HTMLCanvasElement {
+export function createProceduralTexture(body: GlobeId, width = 2048): HTMLCanvasElement {
   const w = width;
   const h = width / 2;
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d')!;
-  if (PALETTES[body]) bandedTexture(ctx, w, h, body);
+  if (body in PALETTES) bandedTexture(ctx, w, h, body as SolarBodyId);
   else if (body === 'mercury') crateredTexture(ctx, w, h, 3, [150, 142, 134]);
   else if (body === 'moon') crateredTexture(ctx, w, h, 9, [160, 160, 156]);
   else if (body === 'mars') crateredTexture(ctx, w, h, 4, [186, 104, 66]);

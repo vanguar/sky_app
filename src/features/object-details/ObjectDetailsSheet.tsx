@@ -9,7 +9,7 @@ import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
 import { constellationName } from '../../catalog/constellations/constellations';
 import { objectName, objectTypeKey, resolveObject, targetOf } from '../../catalog/object-registry';
-import { BODY_DATA } from '../../catalog/planets/planet-data';
+import { BODY_DATA, MOONS_OF } from '../../catalog/planets/planet-data';
 import {
   distanceFromParallax,
   starDesignation,
@@ -390,6 +390,23 @@ export function ObjectDetailsSheet() {
           </button>
         )}
       </div>
+
+      {ref.kind === 'planet' && MOONS_OF[ref.body] && (
+        <div className="moons-row" data-testid="moons-3d">
+          <span className="muted small">{t('details.moons3d')}:</span>
+          {MOONS_OF[ref.body]!.map((m) => (
+            <button
+              key={m}
+              type="button"
+              className="btn btn-small"
+              onClick={() => open3d(m)}
+              data-testid={`moon-3d-${m}`}
+            >
+              {t(`moons.${m}`)}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="tabs" role="tablist">
         {(['brief', 'detailed'] as const).map((l) => (
