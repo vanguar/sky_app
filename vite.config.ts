@@ -63,6 +63,12 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // Live weather must never be served stale by the service worker. The app keeps its own
+            // "last forecast" copy (with its age) for offline use — see src/weather/cache.ts.
+            urlPattern: ({ url }) => url.hostname.endsWith('open-meteo.com'),
+            handler: 'NetworkOnly',
+          },
+          {
             // Planet textures are large: cached lazily, on first use of the 3D viewer.
             urlPattern: ({ url }) => url.pathname.includes('/textures/'),
             handler: 'CacheFirst',

@@ -15,6 +15,17 @@ export interface SolarRenderItem {
   practicalVisible: boolean;
 }
 
+/** A meteor shower radiant shown on the map (active or soon-active showers only). */
+export interface RadiantRenderItem {
+  /** Object id, "meteor-per". */
+  id: string;
+  /** IAU code shown next to the symbol, "PER". */
+  code: string;
+  /** Unit vector in the J2000 equatorial frame. */
+  eqj: Vec3;
+  status: 'upcoming' | 'active' | 'nearPeak' | 'peak';
+}
+
 export interface TargetScreenInfo {
   id: string;
   /** Inside the viewport (and in front of the camera). */

@@ -13,6 +13,8 @@ import { useUiStore } from '../../store/ui-store';
 import { formatDegrees } from '../../utils/format';
 import { useObserver } from '../../utils/use-observer';
 import { buildSearchIndex, searchIndex } from './search-index';
+import { isMeteorObjectId } from '../../meteors/catalog';
+import { showerActivity } from '../../meteors/activity';
 
 export function SearchSheet() {
   const { t, i18n } = useTranslation();
@@ -38,7 +40,10 @@ export function SearchSheet() {
         const ref = resolveObject(hit.id, catalog);
         if (!ref) return null;
         const vis = practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer);
-        return { id: hit.id, name: objectName(ref, t, lang), type: t(objectTypeKey(ref)), vis };
+        // A radiant is a direction, not something to "see": show the shower's activity instead.
+        const meteorStatus =
+          ref.kind === 'meteor' ? showerActivity(ref.shower, now.getTime()).status : null;
+        return { id: hit.id, name: objectName(ref, t, lang), type: t(objectTypeKey(ref)), vis, meteorStatus };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
   }, [open, deferred, index, catalog, platform, observer, t, lang]);
@@ -71,16 +76,20 @@ export function SearchSheet() {
               className="result-main"
               onClick={() => {
                 select(r.id);
-                openPanel('details');
+                openPanel(isMeteorObjectId(r.id) ? 'meteor' : 'details');
               }}
               data-testid={`result-${r.id}`}
             >
               <span className="result-name">{r.name}</span>
               <span className="result-meta">
                 {r.type} ·{' '}
-                <span className={PRACTICAL_CLASS[r.vis.status]} data-testid={`result-status-${r.id}`}>
-                  {t(`practical.${r.vis.status}`)}
-                </span>{' '}
+                {r.meteorStatus ? (
+                  <span data-testid={`result-status-${r.id}`}>{t(`meteors.status.${r.meteorStatus}`)}</span>
+                ) : (
+                  <span className={PRACTICAL_CLASS[r.vis.status]} data-testid={`result-status-${r.id}`}>
+                    {t(`practical.${r.vis.status}`)}
+                  </span>
+                )}{' '}
                 <span dir="ltr">{formatDegrees(r.vis.altitude, i18n.language, 0)}</span>
               </span>
             </button>

@@ -17,6 +17,8 @@ import { useObserver } from '../../utils/use-observer';
 import { usePlatform } from '../../app/providers/PlatformProvider';
 import { computeSolarSnapshot, eqjVectorOf, type SolarSnapshot } from './solar-items';
 import { skyBridge } from './sky-bridge';
+import { isMeteorObjectId } from '../../meteors/catalog';
+import { radiantRenderItems } from '../../meteors/sky-items';
 
 const CARDINAL_KEYS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] as const;
 
@@ -87,10 +89,11 @@ export function SkyView() {
           }
           if (id) {
             useSkyStore.getState().select(id);
-            useUiStore.getState().openPanel('details');
+            useUiStore.getState().openPanel(isMeteorObjectId(id) ? 'meteor' : 'details');
           } else {
             useSkyStore.getState().select(null);
-            if (useUiStore.getState().panel === 'details') useUiStore.getState().closePanel();
+            const panel = useUiStore.getState().panel;
+            if (panel === 'details' || panel === 'meteor') useUiStore.getState().closePanel();
           }
         },
         onContextLost: () => setWebglError(true),
@@ -154,6 +157,7 @@ export function SkyView() {
       const sun = snapshot.positions.find((p) => p.id === 'sun');
       r.setDaylight(sun ? daylightFactor(sun.horizontal.altitude) : 0);
       r.setPracticalFilter(useSkyStore.getState().visibleNow, sun?.horizontal.altitude ?? -90);
+      r.setMeteorRadiants(useSkyStore.getState().layers.meteors ? radiantRenderItems(date.getTime()) : []);
       const cat = useCatalogStore.getState().catalog;
       const { selectedId: sel, navigationTargetId: nav } = useSkyStore.getState();
       const selRef = sel ? resolveObject(sel, cat) : null;
@@ -168,7 +172,7 @@ export function SkyView() {
       clearInterval(id);
       off();
     };
-  }, [platform, observer, catalog, selectedId, navigationTargetId, visibleNow]);
+  }, [platform, observer, catalog, selectedId, navigationTargetId, visibleNow, layers.meteors]);
 
   if (webglError) {
     return (

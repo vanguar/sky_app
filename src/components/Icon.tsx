@@ -24,6 +24,11 @@ const PATHS = {
   rotate: 'M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5',
   download: 'M12 4v11M7 10l5 5 5-5M5 20h14',
   stop: 'M7 7h10v10H7z',
+  cloud: 'M7 18.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 9.8 4.35 4.35 0 0 0 7 18.5z',
+  meteor: 'M3 3l10.5 10.5M8.5 3.5l6 6M3.5 8.5l6 6M17 13a3 3 0 1 1 0 6 3 3 0 0 1 0-6z',
+  tonight: 'M16 15.8A7 7 0 0 1 8.2 5a7.2 7.2 0 1 0 9.8 9.8zM18 3v4M16 5h4',
+  radiant: 'M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.2 3.2M15.2 15.2l3.2 3.2M18.4 5.6l-3.2 3.2M8.8 15.2l-3.2 3.2',
+  refresh: 'M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4',
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -3,7 +3,7 @@ import { starId } from '../catalog/stars/stars';
 import type { Catalog } from '../catalog/types';
 import type { Layers } from '../store/sky-store';
 import { isCategoryVisible } from './DeepSkyLayer';
-import type { SolarRenderItem } from './types';
+import type { RadiantRenderItem, SolarRenderItem } from './types';
 import { pointPassesFilter, worldAltitudeDeg, type PracticalFilterState } from './practical-filter';
 
 /** Touch target radius in CSS px — intentionally larger than the drawn objects. */
@@ -28,6 +28,7 @@ export class Picking {
   private starEqj: Float32Array | null = null;
   private messierEqj: Float32Array | null = null;
   private bodies: SolarRenderItem[] = [];
+  private radiants: readonly RadiantRenderItem[] = [];
   private readonly mvp = new THREE.Matrix4();
   private readonly v4 = new THREE.Vector4();
 
@@ -39,6 +40,10 @@ export class Picking {
 
   setBodies(items: SolarRenderItem[]): void {
     this.bodies = items;
+  }
+
+  setRadiants(items: readonly RadiantRenderItem[]): void {
+    this.radiants = items;
   }
 
   private screenDistance(x: number, y: number, z: number, tx: number, ty: number, ctx: PickContext): number {
@@ -68,6 +73,10 @@ export class Picking {
       const on = b.id === 'sun' ? ctx.layers.sun : b.id === 'moon' ? ctx.layers.moon : ctx.layers.planets;
       if (!on || (ctx.practical.enabled && !b.practicalVisible)) continue;
       consider(b.id, this.screenDistance(b.eqj.x, b.eqj.y, b.eqj.z, tx, ty, ctx), 16);
+    }
+
+    if (ctx.layers.meteors) {
+      for (const r of this.radiants) consider(r.id, this.screenDistance(r.eqj.x, r.eqj.y, r.eqj.z, tx, ty, ctx), 10);
     }
 
     if (this.catalog && this.messierEqj) {

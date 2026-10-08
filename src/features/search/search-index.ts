@@ -1,5 +1,6 @@
 import { SOLAR_BODY_IDS } from '../../astronomy/types';
 import { starDesignation } from '../../catalog/stars/stars';
+import { METEOR_SHOWERS, meteorObjectId } from '../../meteors/catalog';
 import type { Catalog, SkyObjectKind } from '../../catalog/types';
 
 export interface SearchEntry {
@@ -13,7 +14,11 @@ export interface SearchEntry {
 
 export type NameDictionary = Record<
   string,
-  { bodies?: Record<string, string>; messierNames?: Record<string, string> }
+  {
+    bodies?: Record<string, string>;
+    messierNames?: Record<string, string>;
+    meteors?: { names?: Record<string, string> };
+  }
 >;
 
 /**
@@ -57,6 +62,12 @@ export function buildSearchIndex(catalog: Catalog, dictionaries: NameDictionary)
       terms: [...terms],
       prominence: -30,
     });
+  }
+
+  for (const s of METEOR_SHOWERS) {
+    const terms = new Set<string>();
+    addTerms(terms, s.code, ...langs.map((d) => d.meteors?.names?.[s.id]));
+    entries.push({ id: meteorObjectId(s.id), kind: 'meteor', terms: [...terms], prominence: s.major ? 0 : 6 });
   }
 
   for (const c of catalog.constellations) {

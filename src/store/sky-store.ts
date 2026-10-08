@@ -17,6 +17,8 @@ export const LAYER_IDS = [
   'nebulae',
   'clusters',
   'grid',
+  /** Meteor shower radiants (active / soon active showers only). Off by default. */
+  'meteors',
 ] as const;
 export type LayerId = (typeof LAYER_IDS)[number];
 export type Layers = Record<LayerId, boolean>;
@@ -60,12 +62,15 @@ export function layersForPreset(preset: FilterPreset): Layers {
   return l;
 }
 
+/** Layers kept as they are when a quick filter is applied. */
+export const OVERLAY_LAYERS: readonly LayerId[] = ['grid', 'meteors'];
+
 /** Which preset (if any) exactly matches a layer set. */
 export function presetForLayers(layers: Layers): FilterPreset | 'custom' {
   for (const p of FILTER_PRESETS) {
     const ref = layersForPreset(p);
-    // The horizon grid is a viewing aid, independent of object filters.
-    if (LAYER_IDS.every((id) => id === 'grid' || ref[id] === layers[id])) return p;
+    // The horizon grid and meteor radiants are overlays, independent of object filters.
+    if (LAYER_IDS.every((id) => OVERLAY_LAYERS.includes(id) || ref[id] === layers[id])) return p;
   }
   return 'custom';
 }
@@ -119,7 +124,10 @@ export const useSkyStore = create<SkyState>()(
       navigationTargetId: null,
       setVisibleNow: (visibleNow) => set({ visibleNow }),
       setLayer: (id, on) => set((s) => ({ layers: { ...s.layers, [id]: on } })),
-      applyPreset: (preset) => set((s) => ({ layers: { ...layersForPreset(preset), grid: s.layers.grid } })),
+      applyPreset: (preset) =>
+        set((s) => ({
+          layers: { ...layersForPreset(preset), grid: s.layers.grid, meteors: s.layers.meteors },
+        })),
       setViewMode: (viewMode) => set({ viewMode }),
       setSensorStatus: (sensorStatus) => set({ sensorStatus }),
       setHeadingQuality: (headingQuality) => set({ headingQuality }),

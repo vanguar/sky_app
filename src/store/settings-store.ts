@@ -19,6 +19,11 @@ export interface SettingsData {
   /** Manual compass correction in degrees, −180 … 180. */
   headingOffset: number;
   onboardingDone: boolean;
+  /**
+   * Observing-conditions forecast enabled. Off until the user accepts that an APPROXIMATE location
+   * is sent to the weather provider (opt-in, see PRIVACY.md).
+   */
+  weatherEnabled: boolean;
 }
 
 interface SettingsActions {
@@ -30,6 +35,7 @@ interface SettingsActions {
   setSmoothing(level: SmoothingLevel): void;
   setHeadingOffset(deg: number): void;
   completeOnboarding(): void;
+  setWeatherEnabled(on: boolean): void;
   resetAll(): void;
 }
 
@@ -47,6 +53,7 @@ export const DEFAULT_SETTINGS: SettingsData = {
   smoothing: 'medium',
   headingOffset: 0,
   onboardingDone: false,
+  weatherEnabled: false,
 };
 
 /** Validates persisted data field by field; anything invalid falls back to the default. */
@@ -61,6 +68,7 @@ export function sanitizeSettings(raw: unknown): SettingsData {
     smoothing: pickEnum(raw.smoothing, ['low', 'medium', 'high'] as const, DEFAULT_SETTINGS.smoothing),
     headingOffset: pickNumber(raw.headingOffset, DEFAULT_SETTINGS.headingOffset, -180, 180),
     onboardingDone: pickBoolean(raw.onboardingDone, DEFAULT_SETTINGS.onboardingDone),
+    weatherEnabled: pickBoolean(raw.weatherEnabled, DEFAULT_SETTINGS.weatherEnabled),
   };
 }
 
@@ -76,6 +84,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSmoothing: (smoothing) => set({ smoothing }),
       setHeadingOffset: (deg) => set({ headingOffset: Math.max(-180, Math.min(180, deg)) }),
       completeOnboarding: () => set({ onboardingDone: true }),
+      setWeatherEnabled: (weatherEnabled) => set({ weatherEnabled }),
       resetAll: () => set({ ...DEFAULT_SETTINGS }),
     }),
     {
@@ -91,6 +100,7 @@ export const useSettingsStore = create<SettingsState>()(
         smoothing: s.smoothing,
         headingOffset: s.headingOffset,
         onboardingDone: s.onboardingDone,
+        weatherEnabled: s.weatherEnabled,
       }),
       merge: (persisted, current) => ({ ...current, ...sanitizeSettings(persisted) }),
     },

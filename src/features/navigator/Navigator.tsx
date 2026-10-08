@@ -112,6 +112,11 @@ export function Navigator() {
               </span>
             </p>
           ))}
+        {ref.kind === 'meteor' && (
+          <p className="navigator-sub" data-testid="navigator-meteor-hint">
+            {t('meteors.radiantHint')}
+          </p>
+        )}
         {!onTarget && (
           <p className="navigator-sub muted">
             {below

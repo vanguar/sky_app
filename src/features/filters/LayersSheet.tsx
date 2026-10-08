@@ -11,6 +11,7 @@ const GROUPS: { titleKey: string; layers: LayerId[] }[] = [
     layers: ['stars', 'constellationLines', 'constellationNames', 'zodiac', 'constellationBoundaries'],
   },
   { titleKey: 'layers.deepSkyGroup', layers: ['galaxies', 'nebulae', 'clusters'] },
+  { titleKey: 'layers.eventsGroup', layers: ['meteors'] },
   { titleKey: 'settings.display', layers: ['grid'] },
 ];
 
@@ -30,7 +31,9 @@ export function LayersSheet() {
             <Toggle
               key={id}
               label={t(`layers.${id}`)}
-              hint={id === 'zodiac' ? t('layers.zodiacHint') : undefined}
+              hint={
+                id === 'zodiac' ? t('layers.zodiacHint') : id === 'meteors' ? t('layers.meteorsHint') : undefined
+              }
               checked={layers[id]}
               onChange={(on) => setLayer(id, on)}
               testId={`layer-${id}`}

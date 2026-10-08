@@ -1,0 +1,29 @@
+{
+  "year": 2026,
+  "source": "IMO Meteor Shower Calendar 2026 (J. Rendtel, IMO INFO(3-25)), Table 5 and shower notes; facts only",
+  "checked": "2026-10-08",
+  "showers": {
+    "qua": { "start": "2025-12-28", "end": "2026-01-12", "peak": "2026-01-03T21:00:00Z", "peakPrecision": "hour", "zhr": 80 },
+    "ace": { "start": "2026-01-31", "end": "2026-02-20", "peak": "2026-02-08T12:00:00Z", "peakPrecision": "day", "zhr": 6 },
+    "lyr": { "start": "2026-04-14", "end": "2026-04-30", "peak": "2026-04-22T19:40:00Z", "peakPrecision": "hour", "zhr": 18 },
+    "ppu": { "start": "2026-04-15", "end": "2026-04-28", "peak": "2026-04-24T12:00:00Z", "peakPrecision": "day", "zhr": null },
+    "eta": { "start": "2026-04-19", "end": "2026-05-28", "peak": "2026-05-06T12:00:00Z", "peakPrecision": "day", "zhr": 50 },
+    "jbo": { "start": "2026-06-22", "end": "2026-07-02", "peak": "2026-06-22T01:00:00Z", "peakPrecision": "hour", "zhr": null },
+    "cap": { "start": "2026-07-03", "end": "2026-08-15", "peak": "2026-07-31T12:00:00Z", "peakPrecision": "day", "zhr": 5 },
+    "sda": { "start": "2026-07-12", "end": "2026-08-23", "peak": "2026-07-31T12:00:00Z", "peakPrecision": "day", "zhr": 25 },
+    "per": { "start": "2026-07-17", "end": "2026-08-24", "peak": "2026-08-13T03:00:00Z", "peakPrecision": "hour", "zhr": 100 },
+    "kcg": { "start": "2026-08-03", "end": "2026-08-28", "peak": "2026-08-17T12:00:00Z", "peakPrecision": "day", "zhr": 3 },
+    "aur": { "start": "2026-08-28", "end": "2026-09-05", "peak": "2026-09-01T12:00:00Z", "peakPrecision": "day", "zhr": 6 },
+    "spe": { "start": "2026-09-05", "end": "2026-09-21", "peak": "2026-09-09T18:00:00Z", "peakPrecision": "hour", "zhr": 8 },
+    "dra": { "start": "2026-10-06", "end": "2026-10-10", "peak": "2026-10-09T01:00:00Z", "peakPrecision": "hour", "zhr": null },
+    "ori": { "start": "2026-10-02", "end": "2026-11-07", "peak": "2026-10-21T12:00:00Z", "peakPrecision": "day", "zhr": 20 },
+    "sta": { "start": "2026-09-20", "end": "2026-11-20", "peak": "2026-11-05T12:00:00Z", "peakPrecision": "day", "zhr": 7 },
+    "nta": { "start": "2026-10-20", "end": "2026-12-10", "peak": "2026-11-12T12:00:00Z", "peakPrecision": "day", "zhr": 5 },
+    "leo": { "start": "2026-11-06", "end": "2026-11-30", "peak": "2026-11-17T23:45:00Z", "peakPrecision": "hour", "zhr": 15 },
+    "amo": { "start": "2026-11-15", "end": "2026-11-25", "peak": "2026-11-22T12:00:00Z", "peakPrecision": "day", "zhr": null },
+    "pho": { "start": "2026-12-01", "end": "2026-12-05", "peak": "2026-12-02T12:00:00Z", "peakPrecision": "day", "zhr": null },
+    "hyd": { "start": "2026-12-03", "end": "2026-12-20", "peak": "2026-12-09T12:00:00Z", "peakPrecision": "day", "zhr": 7 },
+    "gem": { "start": "2026-12-04", "end": "2026-12-20", "peak": "2026-12-14T14:00:00Z", "peakPrecision": "hour", "zhr": 150 },
+    "urs": { "start": "2026-12-17", "end": "2026-12-26", "peak": "2026-12-22T22:00:00Z", "peakPrecision": "hour", "zhr": 10 }
+  }
+}

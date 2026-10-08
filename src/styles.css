@@ -288,7 +288,8 @@ button.chip {
   white-space: nowrap;
 }
 
-@media (max-width: 380px) {
+/* With the "Tonight" button the bar holds five buttons; the clock chip only fits on wider screens. */
+@media (max-width: 460px) {
   .time-chip {
     display: none;
   }
@@ -1124,4 +1125,196 @@ select option {
 
 .viewer3d-facts {
   margin: 2px 0 0;
+}
+
+/* ------------------------------------------- observing conditions & meteors */
+
+.stars {
+  display: inline-flex;
+  gap: 1px;
+  vertical-align: -2px;
+}
+
+.grade {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.grade-excellent {
+  color: var(--ok);
+}
+
+.grade-good {
+  color: #b6e388;
+}
+
+.grade-fair {
+  color: var(--warn);
+}
+
+.grade-poor {
+  color: #ffab7a;
+}
+
+.grade-bad {
+  color: var(--danger);
+}
+
+.reason-list {
+  margin: 6px 0;
+  padding-inline-start: 18px;
+  font-size: 0.9rem;
+}
+
+.reason-list li + li {
+  margin-top: 2px;
+}
+
+.weather-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 0.85rem;
+  margin-block: 6px;
+}
+
+.weather-status p {
+  margin: 0;
+}
+
+.weather-status.warn,
+.warn-text {
+  color: var(--warn);
+}
+
+.weather-consent {
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-block: 8px;
+  background: rgba(124, 140, 255, 0.08);
+}
+
+.weather-consent p {
+  margin: 0 0 8px;
+}
+
+.consent-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.best-window {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: 1.05rem;
+}
+
+/* Hourly strip scrolls inside itself; the page never scrolls horizontally. */
+.hourly-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 8px;
+  max-width: 100%;
+  scrollbar-width: thin;
+}
+
+.hour-cell {
+  flex: 0 0 auto;
+  min-width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.75rem;
+}
+
+.hour-cell.is-day {
+  opacity: 0.55;
+}
+
+.hour-time {
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.hour-cloud,
+.hour-phase {
+  color: var(--muted);
+}
+
+.weather-facts .fact dd {
+  text-align: end;
+}
+
+.attribution a {
+  color: inherit;
+}
+
+.practical-weather {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.practical-weather.wx-clear {
+  color: var(--ok);
+}
+
+.practical-weather.wx-mixed {
+  color: var(--warn);
+}
+
+.practical-weather.wx-cloudy {
+  color: #ffab7a;
+}
+
+.meteor-status {
+  font-weight: 600;
+}
+
+.meteor-status.peak,
+.meteor-status.nearPeak,
+.meteor-status.near {
+  color: #ffcd96;
+}
+
+.meteor-status.active {
+  color: var(--ok);
+}
+
+.meteor-status.upcoming,
+.meteor-status.inactive {
+  color: var(--muted);
+}
+
+.meteor-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.meteor-learn p {
+  margin-block: 0 8px;
+}
+
+@media (max-width: 380px) {
+  .location-chip span {
+    max-width: 26vw;
+  }
+  .topbar {
+    gap: 6px;
+  }
 }

@@ -36,6 +36,9 @@ import { useNow } from '../../utils/use-now';
 import { useObserver } from '../../utils/use-observer';
 import { eqjVectorOf } from '../sky/solar-items';
 import { skyBridge } from '../sky/sky-bridge';
+import { combineObservability } from '../../observability/object-observability';
+import { assessWeather, hourAt } from '../../weather/observing-conditions';
+import { useWeather } from '../observing/use-weather';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -281,8 +284,13 @@ export function ObjectDetailsSheet() {
   );
 
   const practical = ref ? practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer) : null;
+  // Cached forecast only: opening a card never triggers a network request.
+  const weather = useWeather({ fetch: false });
+  const hour = weather.forecast ? hourAt(weather.forecast.hours, now.getTime()) : null;
+  const combined =
+    practical && weather.enabled ? combineObservability(practical, hour ? assessWeather(hour) : null) : null;
 
-  const open = panelOpen && !!ref;
+  const open = panelOpen && !!ref && ref.kind !== 'meteor';
   if (!open || !ref || !visibility || !practical) {
     return (
       <Sheet open={false} title="" onClose={close}>
@@ -355,7 +363,12 @@ export function ObjectDetailsSheet() {
             alt: formatNumber(Math.max(0, practical.altitude), i18n.language, 0),
           })}
         </p>
-        <p className="practical-note muted">{t('practical.note')}</p>
+        {combined && combined.verdict !== 'belowHorizon' && ref.kind !== 'sun' && (
+          <p className={`practical-weather wx-${combined.weather}`} data-testid="details-weather">
+            {t(`observing.combined.${combined.verdict}`, { name })}
+          </p>
+        )}
+        <p className="practical-note muted">{weather.enabled ? t('practical.noteWeather') : t('practical.note')}</p>
       </div>
 
       <div className="details-actions">

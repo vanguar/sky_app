@@ -10,7 +10,7 @@ import { SkyCamera } from './SkyCamera';
 import { SkyControls } from './SkyControls';
 import { SkyScene } from './SkyScene';
 import { StarLayer } from './StarLayer';
-import type { FrameInfo, LabelTexts, SolarRenderItem, TargetScreenInfo } from './types';
+import type { FrameInfo, LabelTexts, RadiantRenderItem, SolarRenderItem, TargetScreenInfo } from './types';
 import { skyLimitingMagnitude } from '../astronomy/naked-eye';
 import { FILTER_OFF, computeMessierHidden, type PracticalFilterState } from './practical-filter';
 
@@ -161,6 +161,13 @@ export class SkyRenderer {
     this.labels.setBodies(items);
     this.picking.setBodies(items);
     this.invalidate();
+  }
+
+  /** Meteor shower radiants (drawn on the overlay when the "meteors" layer is on). */
+  setMeteorRadiants(items: RadiantRenderItem[]): void {
+    this.labels.radiants.setItems(items);
+    this.picking.setRadiants(items);
+    if (this.layers.meteors) this.invalidate();
   }
 
   setLabelTexts(texts: LabelTexts): void {

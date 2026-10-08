@@ -5,6 +5,7 @@ import type { Catalog, DeepSkyCategory } from '../catalog/types';
 import type { Layers } from '../store/sky-store';
 import { isCategoryVisible } from './DeepSkyLayer';
 import type { LabelTexts, SolarRenderItem } from './types';
+import { MeteorRadiantLayer } from './MeteorRadiantLayer';
 import { pointPassesFilter, worldAltitudeDeg, type PracticalFilterState } from './practical-filter';
 
 const FONT_STACK =
@@ -55,6 +56,8 @@ export class LabelLayer {
   private readonly tmp = new THREE.Vector3();
   private readonly tmp4 = new THREE.Vector4();
   private rects: Rect[] = [];
+  /** Meteor radiants share this overlay canvas and its overlap bookkeeping. */
+  readonly radiants = new MeteorRadiantLayer();
 
   constructor() {
     this.canvas = document.createElement('canvas');
@@ -170,6 +173,18 @@ export class LabelLayer {
       ctx.beginPath();
       ctx.arc(p.x, p.y, 17, 0, Math.PI * 2);
       ctx.stroke();
+    }
+
+    // Meteor radiants (symbol always, code only with labels on).
+    if (f.layers.meteors) {
+      this.radiants.draw(
+        ctx,
+        (v, out) => this.project(v, true, f, out),
+        (x, y, w, h) => this.tryPlace(x, y, w, h),
+        f.showLabels,
+        texts.rtl,
+        1 - 0.4 * f.daylight,
+      );
     }
 
     // Cardinal directions on the horizon.

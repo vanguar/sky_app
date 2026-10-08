@@ -1,6 +1,8 @@
 # Data sources & licenses
 
 AstroPoint ships only data and images whose licenses allow redistribution **and future commercial use**.
+The one exception is the optional runtime weather forecast (Open-Meteo free API, **non-commercial only**, see #16) —
+it is not bundled, and must be switched to a commercial plan or another provider before any commercial release.
 Raw source files are kept in [`data/source/`](../data/source) and converted to the compact runtime catalogs in
 [`public/catalogs/`](../public/catalogs) by `npm run catalogs` ([`scripts/build-catalogs.mjs`](../scripts/build-catalogs.mjs)).
 
@@ -22,6 +24,23 @@ Raw source files are kept in [`data/source/`](../data/source) and converted to t
 | 11 | **World Magnetic Model WMM2025** (NOAA NCEI / British Geological Survey) | https://www.ncei.noaa.gov/products/world-magnetic-model | Spherical-harmonic coefficients (`data/source/wmm/WMM2025.COF` → `src/astronomy/wmm2025.ts`) and official test values, used to convert magnetic compass headings to true north | Public domain (U.S. Government work) | No | Yes | Valid 2025.0–2030.0; verified against all 100 official test points. |
 | 10 | **AstroPoint originals** | this repository | Ukrainian constellation names, extra star-name translations (uk/de/fr), all UI texts in 8 languages, object descriptions, app icons, procedural textures (Saturn, Uranus, Neptune, ring texture) | MIT (this repository) | — | Yes | Procedural textures (Saturn, Uranus, Neptune — no public-domain global maps exist for these cloud-covered giants) are illustrative and labelled as such in the 3D viewer. |
 
+## Network data & factual datasets added in 2026-10 (checked 2026-10-08)
+
+| # | Source | Purpose | License / terms | Attribution | Commercial use | Date checked |
+|---|--------|---------|-----------------|-------------|----------------|--------------|
+| 16 | **Open-Meteo Forecast API** — https://open-meteo.com/en/docs (free endpoint `api.open-meteo.com/v1/forecast`, "best match" model) | Hourly cloud cover (total/low/mid/high), visibility, relative humidity, dew point, precipitation probability & amount, WMO weather code, wind speed & gusts at 10 m, temperature — for the *Observing conditions* estimate. Requested at runtime, client-side, only after user opt-in; never bundled. | Data: **CC BY 4.0**. Free API: **non-commercial use only** (< 10 000 calls/day, 5 000/h, 600/min) — [terms](https://open-meteo.com/en/terms), [pricing](https://open-meteo.com/en/pricing). | **Required**: "Weather data by Open-Meteo.com (CC BY 4.0)" with a link — shown in the conditions sheet and in Settings. | **No, not with the free endpoint.** A commercial AstroPoint (ads, subscriptions, paid app) needs a paid Open-Meteo plan (`customer-api.open-meteo.com` + API key), a self-hosted Open-Meteo instance / proxy, or another provider. `WeatherProvider` is pluggable for exactly this reason. | 2026-10-08 |
+| 17 | **IMO Meteor Shower Calendar 2026** (J. Rendtel, IMO INFO(3-25), DOI 10.13140/RG.2.2.36179.08480), Table 5 "Working List of Visual Meteor Showers", Table 6 radiant drift, shower notes — https://www.imo.net/resources/calendar/ (the 2026 PDF was read from the Internet Archive copy of `imo.net/files/meteor-shower/cal2026.pdf` because imo.net is being rebuilt) | Activity windows, maxima (date / UT time where given), radiant RA/Dec at maximum, approximate daily drift, geocentric speed, expected ZHR for 22 visual showers → [`src/meteors/catalog.ts`](../src/meteors/catalog.ts), [`src/meteors/data/2026.json`](../src/meteors/data/2026.json) | The calendar document is © IMO; no licence is granted for redistributing the document or its tables. **Only facts** (dates, coordinates, speeds, rates — not copyrightable) were transcribed into an AstroPoint-curated dataset; **no text, tables or figures were copied**. The PDF itself is not included in the repository. | Credit given ("Shower data: IMO Meteor Shower Calendar 2026") in the shower cards. | Yes (facts) | 2026-10-08 |
+| 18 | **NASA Science — meteor shower pages** (https://science.nasa.gov/solar-system/meteors-meteorites/) | Parent bodies of QUA (2003 EH1), LYR (C/1861 G1 Thatcher), ETA & ORI (1P/Halley), LEO (55P/Tempel–Tuttle), GEM (3200 Phaethon), PER (109P/Swift–Tuttle). JBO (7P), DRA (21P), STA/NTA (2P) per the IMO calendar text. | Public domain (U.S. Government work); facts only | No | Yes | 2026-10-08 |
+
+Notes on the meteor dataset:
+* Base definitions (stable: radiant, speed, parent body, typical dates) and **year data** (activity window, peak,
+  ZHR) are separate. 2027+ is added by dropping `src/meteors/data/2027.json` and registering it in
+  `src/meteors/activity.ts`; until then the app uses the typical dates and labels them *approximate*.
+* Parent bodies are listed only where confirmed by NASA or the IMO calendar during the 2026-10-08 check; all others are left empty rather than guessed.
+* Shower descriptions in all 8 languages are original AstroPoint texts.
+* Excluded on purpose: the Antihelion Source (diffuse radiant area), daytime radio showers, and minor streams
+  with ZHR ≈ 2–3.
+
 ## Not used (deliberately)
 
 * **Stellarium** sky cultures / code — GPL; not used, no code copied.
@@ -34,3 +53,4 @@ Raw source files are kept in [`data/source/`](../data/source) and converted to t
 > Star data: Hipparcos catalogue, ESA (1997), via VizieR (CDS, Strasbourg). Constellation lines, boundaries, names and
 > Messier list: d3-celestial © Olaf Frohn (BSD-3-Clause). Ephemerides: Astronomy Engine © Don Cross (MIT).
 > Planetary data and maps: NASA, JPL, USGS, NASA SVS (public domain). Magnetic model: WMM2025, NOAA/BGS (public domain).
+> Meteor shower data: IMO Meteor Shower Calendar (facts). Weather data by Open-Meteo.com (CC BY 4.0, optional feature).

@@ -40,6 +40,16 @@ export function TopBar() {
       <button
         type="button"
         className="icon-btn glass"
+        onClick={() => openPanel('tonight')}
+        aria-label={t('tonight.open')}
+        title={t('tonight.open')}
+        data-testid="open-tonight"
+      >
+        <Icon name="tonight" />
+      </button>
+      <button
+        type="button"
+        className="icon-btn glass"
         onClick={() => openPanel('search')}
         aria-label={t('topbar.search')}
         data-testid="open-search"

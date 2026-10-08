@@ -25,6 +25,11 @@ import { useSkyStore } from '../store/sky-store';
 import { useUiStore } from '../store/ui-store';
 import { usePlatform } from './providers/PlatformProvider';
 import { PwaUpdater } from './PwaUpdater';
+import { isMeteorObjectId } from '../meteors/catalog';
+import { MeteorShowerSheet } from '../features/meteors/MeteorShowerSheet';
+import { MeteorsListSheet } from '../features/meteors/MeteorsListSheet';
+import { TonightSheet } from '../features/observing/TonightSheet';
+import { WeatherSheet } from '../features/observing/WeatherSheet';
 import { parseHash, replaceHash } from './routes';
 
 // 3D viewer (and its textures) is loaded only when first opened.
@@ -71,7 +76,7 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
       const { objectId } = parseHash(location.hash);
       if (objectId && resolveObject(objectId, catalog)) {
         useSkyStore.getState().select(objectId);
-        useUiStore.getState().openPanel('details');
+        useUiStore.getState().openPanel(isMeteorObjectId(objectId) ? 'meteor' : 'details');
       }
     };
     apply();
@@ -127,6 +132,12 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
         <ObjectDetailsSheet />
         <SettingsSheet />
         <LocationSheet />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <TonightSheet />
+        <WeatherSheet />
+        <MeteorsListSheet />
+        <MeteorShowerSheet />
       </ErrorBoundary>
 
       {viewer3d && viewerName && (

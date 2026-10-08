@@ -25,14 +25,23 @@ in that direction — computed on the device for your place and the current time
   Neptune with illustrative textures), rotate / pinch / reset / auto-rotate, Moon & Mars landmarks.
 * 8 languages (en, ru, uk, de, fr, es, it, ar) with live switching and full RTL for Arabic.
 * Practical naked-eye visibility (visible / difficult / not practically visible / below horizon, with a reason) and a “Visible now” filter.
+* **Observing conditions** (optional, opt-in): weather for the sky, not a weather app — a practical rating
+  (1–5 stars) with reasons, cloud cover, visibility, humidity, wind, precipitation, an hourly strip and the
+  **best observing window tonight** (night hours only). Offline it shows the last forecast with its age.
+* **Meteor showers**: 22 visual showers (IMO 2026 data, works offline), activity status, radiant on the map
+  (layer), **Find radiant**, Moon interference, a conditions score and the **best time tonight**; ZHR is always
+  explained ("up to ~N under ideal conditions"), never shown as a promised count.
+* **Tonight** screen: is it worth going out, when, and is there a meteor shower.
 * Dark UI for night use, brightness control, **night vision (red)** mode.
 * PWA: installable, works offline after the first visit (app shell + catalogs precached; textures cached on use).
-* Privacy: no backend, no account, no analytics. Location never leaves the device.
+* Privacy: no backend, no account, no analytics. Location stays on the device — except for the optional
+  weather forecast, which sends coordinates rounded to ~5 km to Open-Meteo after you enable it.
 
 ## Screens
 
 Onboarding (welcome → location → optional sensors) · Sky map (top bar, crosshair, side controls, filter bar) ·
-Search sheet · Object card · Find-in-Sky navigator · Layers · Settings/menu · Location · 3D viewer.
+Search sheet · Object card · Find-in-Sky navigator · Layers · Settings/menu · Location · 3D viewer ·
+Tonight · Observing conditions · Meteor showers list · Meteor shower card.
 
 ## Stack
 
@@ -101,7 +110,8 @@ How to verify on a real device: see *Testing on a phone* below.
 
 ## Privacy
 
-See [PRIVACY.md](PRIVACY.md). TL;DR: everything is computed locally; nothing is sent anywhere.
+See [PRIVACY.md](PRIVACY.md). TL;DR: everything is computed locally. The only exception is the opt-in weather
+forecast: rounded coordinates (0.05°, ≈ 5 km) are sent to Open-Meteo — nothing else.
 
 ## Deployment
 
@@ -111,7 +121,13 @@ Vercel (`vercel.json`), any static host.
 ## Data sources
 
 See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md): ESA Hipparcos, d3-celestial (BSD-3), Astronomy Engine (MIT),
-NASA fact sheets and NASA/JPL/USGS/NRL maps (public domain). No data with unclear licensing is included.
+NASA fact sheets and NASA/JPL/USGS/NRL maps (public domain), IMO Meteor Shower Calendar 2026 (facts only).
+No data with unclear licensing is included.
+
+**Weather licence — important.** The forecast uses the free Open-Meteo API, which is licensed for
+**non-commercial use only** (data CC BY 4.0, attribution shown in the app). A commercial release (ads,
+subscriptions, paid app) must switch to a paid Open-Meteo plan, a self-hosted instance / proxy or another
+provider — implement `WeatherProvider` (`src/weather/types.ts`) and swap it in `src/app/providers/platform.ts`.
 
 ## Architecture
 
@@ -122,7 +138,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 * Time travel / time-lapse UI (TimeController is ready)
 * Satellites & ISS (TLE + SGP4 in a worker)
 * Camera AR overlay, plate solving for heading correction
-* Events: eclipses, conjunctions, meteor showers
+* Events: eclipses, conjunctions
+* Astronomical seeing provider (turbulence) on top of the weather-based conditions
 * Surface maps (Moon, Mars, Mercury), more planetary textures
 * Capacitor builds for Android / iOS with native sensor providers
 * Fainter star tiles loaded progressively

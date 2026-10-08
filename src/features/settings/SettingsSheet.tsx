@@ -16,6 +16,7 @@ import { useObserver } from '../../utils/use-observer';
 import { skyBridge } from '../sky/sky-bridge';
 import type { SmoothingLevel } from '../../sensors/smoothing';
 import { useInstallPrompt } from '../../app/pwa';
+import { useWeatherStore } from '../../store/weather-store';
 
 export function LanguageSelect({ testId }: { testId?: string }) {
   const { t, i18n } = useTranslation();
@@ -94,6 +95,15 @@ export function SettingsSheet() {
           <button type="button" className="menu-item" onClick={() => openPanel('layers')}>
             {t('menu.layers')}
           </button>
+          <button type="button" className="menu-item" onClick={() => openPanel('tonight')} data-testid="menu-tonight">
+            {t('menu.tonight')}
+          </button>
+          <button type="button" className="menu-item" onClick={() => openPanel('weather')} data-testid="menu-weather">
+            {t('menu.weather')}
+          </button>
+          <button type="button" className="menu-item" onClick={() => openPanel('meteors')} data-testid="menu-meteors">
+            {t('menu.meteors')}
+          </button>
           <button type="button" className="menu-item" onClick={() => openPanel('location')}>
             {t('menu.location')}
           </button>
@@ -140,6 +150,29 @@ export function SettingsSheet() {
             <option value="detailed">{t('details.detailed')}</option>
           </select>
         </label>
+      </section>
+
+      <section className="sheet-section">
+        <h3>{t('settings.weatherSection')}</h3>
+        <Toggle
+          label={t('settings.weather')}
+          hint={t('settings.weatherHint')}
+          checked={s.weatherEnabled}
+          onChange={(on) => {
+            s.setWeatherEnabled(on);
+            if (!on) {
+              // Turning the feature off also forgets the downloaded forecast.
+              platform.weather.clearCache();
+              useWeatherStore.getState().reset();
+            }
+          }}
+          testId="weather-toggle"
+        />
+        <p className="small muted">
+          <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
+            {t('observing.attribution')}
+          </a>
+        </p>
       </section>
 
       <section className="sheet-section">
@@ -193,6 +226,8 @@ export function SettingsSheet() {
           onClick={() => {
             if (window.confirm(t('settings.resetConfirm'))) {
               s.resetAll();
+              platform.weather.clearCache();
+              useWeatherStore.getState().reset();
               close();
             }
           }}

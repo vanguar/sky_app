@@ -13,8 +13,19 @@ export function formatDegrees(value: number, lang: string, digits = 1): string {
   return `${formatNumber(value, lang, digits)}°`;
 }
 
-export function formatTime(date: Date, lang: string): string {
-  return new Intl.DateTimeFormat(intlLocale(lang), { hour: '2-digit', minute: '2-digit' }).format(date);
+/** Hours and minutes; `timeZone` (IANA) formats in the observer's zone instead of the device zone. */
+export function formatTime(date: Date, lang: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat(intlLocale(lang), { hour: '2-digit', minute: '2-digit', timeZone }).format(date);
+}
+
+/** Day and month, e.g. "12 Aug" / "12 авг.", in the observer's zone when given. */
+export function formatDayMonth(date: Date, lang: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat(intlLocale(lang), { day: 'numeric', month: 'short', timeZone }).format(date);
+}
+
+/** "22:00–01:00" (the en dash is kept left-to-right in RTL text by the caller's dir="ltr"). */
+export function formatTimeRange(start: Date, end: Date, lang: string, timeZone?: string): string {
+  return `${formatTime(start, lang, timeZone)}–${formatTime(end, lang, timeZone)}`;
 }
 
 /** Time, with weekday when the date is not today. */

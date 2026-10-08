@@ -1,4 +1,5 @@
 import type { SolarBodyId } from '../astronomy/types';
+import type { MeteorShowerDefinition } from '../meteors/types';
 
 export type LanguageCode = 'en' | 'ru' | 'uk' | 'de' | 'fr' | 'es' | 'it' | 'ar';
 
@@ -72,11 +73,13 @@ export interface Catalog {
   messier: MessierRecord[];
 }
 
-export type SkyObjectKind = 'sun' | 'moon' | 'planet' | 'star' | 'messier' | 'constellation';
+export type SkyObjectKind = 'sun' | 'moon' | 'planet' | 'star' | 'messier' | 'constellation' | 'meteor';
 
 /** Unified reference to anything selectable. */
 export type SkyObjectRef =
   | { kind: 'sun' | 'moon' | 'planet'; id: SolarBodyId; body: SolarBodyId }
   | { kind: 'star'; id: string; star: StarRecord }
   | { kind: 'messier'; id: string; messier: MessierRecord }
-  | { kind: 'constellation'; id: string; constellation: ConstellationRecord };
+  | { kind: 'constellation'; id: string; constellation: ConstellationRecord }
+  /** Meteor shower radiant (position for the current observation date, J2000 degrees). */
+  | { kind: 'meteor'; id: string; shower: MeteorShowerDefinition; raDeg: number; decDeg: number };

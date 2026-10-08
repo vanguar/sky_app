@@ -33,6 +33,9 @@ export function brightnessOf(
       return { magnitude: ref.star.mag, objectClass: 'point' };
     case 'messier':
       return { magnitude: ref.messier.mag, objectClass: deepSkyClass(ref.messier.category) };
+    case 'meteor':
+      // A radiant is a direction, not a light source.
+      return { magnitude: null, objectClass: 'point' };
     case 'constellation':
       // A constellation is "visible" when its brightest star is.
       return { magnitude: brightestStarMag(ref.constellation.abbr, catalog), objectClass: 'point' };

@@ -3,6 +3,10 @@ import { SOLAR_BODY_IDS, type SkyTarget, type SolarBodyId } from '../astronomy/t
 import { constellationName } from './constellations/constellations';
 import { starDesignation, starProperName } from './stars/stars';
 import type { Catalog, LanguageCode, SkyObjectRef } from './types';
+import { timeController } from '../astronomy/time-controller';
+import { showerFromObjectId } from '../meteors/catalog';
+import { showerActivity } from '../meteors/activity';
+import { radiantAt } from '../meteors/radiant';
 
 export function isSolarBodyId(id: string): id is SolarBodyId {
   return (SOLAR_BODY_IDS as readonly string[]).includes(id);
@@ -13,6 +17,13 @@ export function resolveObject(id: string, catalog: Catalog | null): SkyObjectRef
   if (isSolarBodyId(id)) {
     const kind = id === 'sun' ? 'sun' : id === 'moon' ? 'moon' : 'planet';
     return { kind, id, body: id };
+  }
+  const shower = showerFromObjectId(id);
+  if (shower) {
+    // Radiants drift slowly (≈1°/day): the position for the current observation time is enough.
+    const t = timeController.nowMs();
+    const r = radiantAt(shower, showerActivity(shower, t).occurrence, t);
+    return { kind: 'meteor', id, shower, raDeg: r.raDeg, decDeg: r.decDeg };
   }
   if (!catalog) return null;
   if (id.startsWith('hip-')) {
@@ -46,6 +57,8 @@ export function targetOf(ref: SkyObjectRef): SkyTarget {
       const [ra, dec] = ref.constellation.labels[0];
       return { kind: 'fixed', raHours: ra / 15, decDeg: dec };
     }
+    case 'meteor':
+      return { kind: 'fixed', raHours: ref.raDeg / 15, decDeg: ref.decDeg };
   }
 }
 
@@ -66,6 +79,8 @@ export function objectName(ref: SkyObjectRef, t: TFunction, lang: LanguageCode):
     }
     case 'constellation':
       return constellationName(ref.constellation, lang);
+    case 'meteor':
+      return t(`meteors.names.${ref.shower.id}`);
   }
 }
 
@@ -84,5 +99,7 @@ export function objectTypeKey(ref: SkyObjectRef): string {
       return `types.${ref.messier.subtype ?? ref.messier.category}`;
     case 'constellation':
       return ref.constellation.zodiac ? 'types.zodiacConstellation' : 'types.constellation';
+    case 'meteor':
+      return 'types.meteorRadiant';
   }
 }

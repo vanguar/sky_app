@@ -1,7 +1,22 @@
 import { create } from 'zustand';
 import type { GlobeId } from '../catalog/planets/planet-data';
 
-export type Panel = 'none' | 'menu' | 'search' | 'layers' | 'settings' | 'location' | 'details';
+export type Panel =
+  | 'none'
+  | 'menu'
+  | 'search'
+  | 'layers'
+  | 'settings'
+  | 'location'
+  | 'details'
+  /** "Tonight" overview: observing conditions + active meteor showers. */
+  | 'tonight'
+  /** Observing conditions (weather) sheet. */
+  | 'weather'
+  /** List of all meteor showers of the year. */
+  | 'meteors'
+  /** One meteor shower card (shower = selected object id "meteor-<code>"). */
+  | 'meteor';
 
 export interface Toast {
   id: number;
