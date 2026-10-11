@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
-import { timeController } from '../astronomy/time-controller';
+import { usePlatform } from '../app/providers/PlatformProvider';
+import { useDocumentVisible } from './use-document-visible';
 
 /** Re-renders every `intervalMs` with the TimeController's current observation time. */
-export function useNow(intervalMs = 1000): Date {
-  const [now, setNow] = useState(() => timeController.now());
+export function useNow(intervalMs = 1000, enabled = true): Date {
+  const { time } = usePlatform();
+  const visible = useDocumentVisible();
+  const [now, setNow] = useState(() => time.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(timeController.now()), intervalMs);
-    const off = timeController.subscribe((d) => setNow(d));
+    if (!enabled || !visible) return;
+    setNow(time.now());
+    const id = setInterval(() => setNow(time.now()), intervalMs);
+    const off = time.subscribe((d) => setNow(d));
     return () => {
       clearInterval(id);
       off();
     };
-  }, [intervalMs]);
+  }, [intervalMs, enabled, visible, time]);
   return now;
 }

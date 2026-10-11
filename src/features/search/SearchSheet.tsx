@@ -6,7 +6,7 @@ import { objectName, objectTypeKey, resolveObject } from '../../catalog/object-r
 import { practicalVisibilityOf } from '../../catalog/practical';
 import { PRACTICAL_CLASS } from '../object-details/practical-ui';
 import type { LanguageCode } from '../../catalog/types';
-import { RESOURCES } from '../../i18n/languages';
+import SEARCH_NAMES from './search-names.json';
 import { useCatalogStore } from '../../store/catalog-store';
 import { useSkyStore } from '../../store/sky-store';
 import { useUiStore } from '../../store/ui-store';
@@ -30,7 +30,10 @@ export function SearchSheet() {
   const deferred = useDeferredValue(query);
   const lang = i18n.language as LanguageCode;
 
-  const index = useMemo(() => (catalog ? buildSearchIndex(catalog, RESOURCES) : []), [catalog]);
+  const index = useMemo(
+    () => (catalog && open ? buildSearchIndex(catalog, SEARCH_NAMES) : []),
+    [catalog, open],
+  );
 
   const results = useMemo(() => {
     if (!open || !deferred.trim()) return [];
@@ -41,8 +44,7 @@ export function SearchSheet() {
         if (!ref) return null;
         const vis = practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer);
         // A radiant is a direction, not something to "see": show the shower's activity instead.
-        const meteorStatus =
-          ref.kind === 'meteor' ? showerActivity(ref.shower, now.getTime()).status : null;
+        const meteorStatus = ref.kind === 'meteor' ? showerActivity(ref.shower, now.getTime()).status : null;
         return { id: hit.id, name: objectName(ref, t, lang), type: t(objectTypeKey(ref)), vis, meteorStatus };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);

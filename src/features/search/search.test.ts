@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { buildCatalog } from '../../catalog/loader';
 import { resolveObject } from '../../catalog/object-registry';
 import type { Catalog } from '../../catalog/types';
-import { RESOURCES } from '../../i18n/languages';
+import { RESOURCES } from '../../i18n/resources';
 import { buildSearchIndex, normalizeSearchText, searchIndex, type SearchEntry } from './search-index';
 
 const read = (f: string) => JSON.parse(readFileSync(join(process.cwd(), 'public', 'catalogs', f), 'utf8'));

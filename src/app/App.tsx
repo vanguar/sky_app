@@ -6,13 +6,8 @@ import { objectName, resolveObject } from '../catalog/object-registry';
 import type { LanguageCode } from '../catalog/types';
 import { isMoonId } from '../catalog/planets/planet-data';
 import { FilterBar } from '../features/filters/FilterBar';
-import { LayersSheet } from '../features/filters/LayersSheet';
 import { Navigator } from '../features/navigator/Navigator';
-import { ObjectDetailsSheet } from '../features/object-details/ObjectDetailsSheet';
 import { Onboarding } from '../features/onboarding/Onboarding';
-import { SearchSheet } from '../features/search/SearchSheet';
-import { LocationSheet } from '../features/settings/LocationSheet';
-import { SettingsSheet } from '../features/settings/SettingsSheet';
 import { Crosshair } from '../features/sky/Crosshair';
 import { ModeControls } from '../features/sky/ModeControls';
 import { enableSensorMode } from '../features/sky/sensor-mode';
@@ -26,14 +21,39 @@ import { useUiStore } from '../store/ui-store';
 import { usePlatform } from './providers/PlatformProvider';
 import { PwaUpdater } from './PwaUpdater';
 import { isMeteorObjectId } from '../meteors/catalog';
-import { MeteorShowerSheet } from '../features/meteors/MeteorShowerSheet';
-import { MeteorsListSheet } from '../features/meteors/MeteorsListSheet';
-import { TonightSheet } from '../features/observing/TonightSheet';
-import { WeatherSheet } from '../features/observing/WeatherSheet';
 import { parseHash, replaceHash } from './routes';
 
 // 3D viewer (and its textures) is loaded only when first opened.
 const Planet3DViewer = lazy(() => import('../features/planet-3d/Planet3DViewer'));
+const SearchSheet = lazy(() =>
+  import('../features/search/SearchSheet').then((module) => ({ default: module.SearchSheet })),
+);
+const LayersSheet = lazy(() =>
+  import('../features/filters/LayersSheet').then((module) => ({ default: module.LayersSheet })),
+);
+const ObjectDetailsSheet = lazy(() =>
+  import('../features/object-details/ObjectDetailsSheet').then((module) => ({
+    default: module.ObjectDetailsSheet,
+  })),
+);
+const SettingsSheet = lazy(() =>
+  import('../features/settings/SettingsSheet').then((module) => ({ default: module.SettingsSheet })),
+);
+const LocationSheet = lazy(() =>
+  import('../features/settings/LocationSheet').then((module) => ({ default: module.LocationSheet })),
+);
+const TonightSheet = lazy(() =>
+  import('../features/observing/TonightSheet').then((module) => ({ default: module.TonightSheet })),
+);
+const WeatherSheet = lazy(() =>
+  import('../features/observing/WeatherSheet').then((module) => ({ default: module.WeatherSheet })),
+);
+const MeteorsListSheet = lazy(() =>
+  import('../features/meteors/MeteorsListSheet').then((module) => ({ default: module.MeteorsListSheet })),
+);
+const MeteorShowerSheet = lazy(() =>
+  import('../features/meteors/MeteorShowerSheet').then((module) => ({ default: module.MeteorShowerSheet })),
+);
 
 export function App({ askLanguage }: { askLanguage: boolean }) {
   const { t, i18n } = useTranslation();
@@ -48,6 +68,7 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
   const loadCatalog = useCatalogStore((s) => s.load);
   const selectedId = useSkyStore((s) => s.selectedId);
   const viewer3d = useUiStore((s) => s.viewer3d);
+  const panel = useUiStore((s) => s.panel);
   const close3d = useUiStore((s) => s.close3d);
   // The URL is only rewritten after the initial deep link has been applied (catalog loaded).
   const routeReady = useRef(false);
@@ -77,6 +98,12 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
       if (objectId && resolveObject(objectId, catalog)) {
         useSkyStore.getState().select(objectId);
         useUiStore.getState().openPanel(isMeteorObjectId(objectId) ? 'meteor' : 'details');
+      } else {
+        useSkyStore.getState().select(null);
+        const ui = useUiStore.getState();
+        if (ui.panel === 'details' || ui.panel === 'meteor') ui.closePanel();
+        ui.close3d();
+        replaceHash({ objectId: null });
       }
     };
     apply();
@@ -86,7 +113,7 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
   }, [catalog]);
 
   useEffect(() => {
-    if (routeReady.current) replaceHash({ objectId: selectedId });
+    if (routeReady.current) replaceHash({ objectId: useSkyStore.getState().selectedId });
   }, [selectedId, catalog]);
 
   const viewerRef = viewer3d && !isMoonId(viewer3d) ? resolveObject(viewer3d, catalog) : null;
@@ -127,17 +154,23 @@ export function App({ askLanguage }: { askLanguage: boolean }) {
       )}
 
       <ErrorBoundary>
-        <SearchSheet />
-        <LayersSheet />
-        <ObjectDetailsSheet />
-        <SettingsSheet />
-        <LocationSheet />
-      </ErrorBoundary>
-      <ErrorBoundary>
-        <TonightSheet />
-        <WeatherSheet />
-        <MeteorsListSheet />
-        <MeteorShowerSheet />
+        <Suspense
+          fallback={
+            <div className="banner glass" role="status">
+              {t('common.loading')}
+            </div>
+          }
+        >
+          {panel === 'search' && <SearchSheet />}
+          {panel === 'layers' && <LayersSheet />}
+          {panel === 'details' && <ObjectDetailsSheet />}
+          {(panel === 'settings' || panel === 'menu') && <SettingsSheet />}
+          {panel === 'location' && <LocationSheet />}
+          {panel === 'tonight' && <TonightSheet />}
+          {panel === 'weather' && <WeatherSheet />}
+          {panel === 'meteors' && <MeteorsListSheet />}
+          {panel === 'meteor' && <MeteorShowerSheet />}
+        </Suspense>
       </ErrorBoundary>
 
       {viewer3d && viewerName && (

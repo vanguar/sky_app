@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { astronomyService } from '../astronomy/astronomy.service';
 import { equatorialToHorizontal, localSiderealTime } from '../astronomy/coordinate-transform';
-import { RESOURCES, LANGUAGES } from '../i18n/languages';
+import { LANGUAGES } from '../i18n/languages';
+import { RESOURCES } from '../i18n/resources';
 import type { ObservingConditionsResult } from '../weather/observing-conditions';
 import { YEAR_DATA, occurrenceFor, showerActivity, typicalOccurrence } from './activity';
 import { bestFromSlots, type MeteorSlot } from './best-time';
@@ -116,7 +117,12 @@ describe('radiant position', () => {
     const occ = showerActivity(per, t).occurrence;
     const hor = radiantHorizontal(astronomyService, per, occ, t, kyiv);
     const r = radiantAt(per, occ, t);
-    const ref = equatorialToHorizontal(r.raDeg / 15, r.decDeg, kyiv.latitude, localSiderealTime(new Date(t), kyiv.longitude));
+    const ref = equatorialToHorizontal(
+      r.raDeg / 15,
+      r.decDeg,
+      kyiv.latitude,
+      localSiderealTime(new Date(t), kyiv.longitude),
+    );
     // Differences: precession J2000 → date and refraction (≪ 1°).
     expect(Math.abs(hor.altitude - ref.altitude)).toBeLessThan(1);
     expect(Math.abs(hor.azimuth - ref.azimuth)).toBeLessThan(1.5);
@@ -194,7 +200,10 @@ describe('meteor observability', () => {
   });
 
   it('an inactive shower scores 0', () => {
-    expect(meteorObservability(input({ status: 'inactive' }))).toMatchObject({ score: 0, reasons: ['notActive'] });
+    expect(meteorObservability(input({ status: 'inactive' }))).toMatchObject({
+      score: 0,
+      reasons: ['notActive'],
+    });
   });
 
   it('never returns a meteor count', () => {

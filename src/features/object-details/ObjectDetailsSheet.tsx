@@ -256,6 +256,7 @@ export function ObjectDetailsSheet() {
   const platform = usePlatform();
   const lang = i18n.language as LanguageCode;
   const panelOpen = useUiStore((s) => s.panel === 'details');
+  const viewerOpen = useUiStore((s) => s.viewer3d !== null);
   const close = useUiStore((s) => s.closePanel);
   const open3d = useUiStore((s) => s.open3d);
   const selectedId = useSkyStore((s) => s.selectedId);
@@ -265,25 +266,27 @@ export function ObjectDetailsSheet() {
   const defaultLevel = useSettingsStore((s) => s.infoLevel);
   const [level, setLevel] = useState<InfoLevel>(defaultLevel);
   const observer = useObserver();
-  const now = useNow(1000);
+  const active = panelOpen && !viewerOpen;
+  const now = useNow(1000, active);
   const minute = Math.floor(now.getTime() / 60000);
 
   const ref = useMemo(() => (selectedId ? resolveObject(selectedId, catalog) : null), [selectedId, catalog]);
   useEffect(() => setLevel(defaultLevel), [selectedId, defaultLevel]);
 
-  const target = ref ? targetOf(ref) : null;
+  const target = panelOpen && ref ? targetOf(ref) : null;
   const visibility = target ? platform.astronomy.getVisibility(target, now, observer) : null;
   const bodyPos =
-    ref && (ref.kind === 'sun' || ref.kind === 'moon' || ref.kind === 'planet')
+    panelOpen && ref && (ref.kind === 'sun' || ref.kind === 'moon' || ref.kind === 'planet')
       ? platform.astronomy.getBodyPosition(ref.body, now, observer)
       : null;
   const riseSet = useMemo(
     () => (target ? platform.astronomy.getRiseSet(target, new Date(minute * 60000), observer) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedId, minute, observer, platform],
+    [selectedId, minute, observer, platform, panelOpen],
   );
 
-  const practical = ref ? practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer) : null;
+  const practical =
+    panelOpen && ref ? practicalVisibilityOf(ref, catalog, platform.astronomy, now, observer) : null;
   // Cached forecast only: opening a card never triggers a network request.
   const weather = useWeather({ fetch: false });
   const hour = weather.forecast ? hourAt(weather.forecast.hours, now.getTime()) : null;
@@ -368,7 +371,9 @@ export function ObjectDetailsSheet() {
             {t(`observing.combined.${combined.verdict}`, { name })}
           </p>
         )}
-        <p className="practical-note muted">{weather.enabled ? t('practical.noteWeather') : t('practical.note')}</p>
+        <p className="practical-note muted">
+          {weather.enabled ? t('practical.noteWeather') : t('practical.note')}
+        </p>
       </div>
 
       <div className="details-actions">

@@ -140,6 +140,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
   async getForecast(location: WeatherQueryLocation, options: ForecastOptions = {}): Promise<WeatherForecast> {
     const fetchImpl = this.opts.fetchImpl ?? globalThis.fetch.bind(globalThis);
     const now = this.opts.now ?? Date.now;
+    if (options.signal?.aborted) throw new WeatherError('aborted', 'Weather request cancelled');
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       throw new WeatherError('offline', 'Device is offline');
     }
@@ -152,13 +153,25 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       controller.abort();
     }, this.opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     const onOuterAbort = () => controller.abort();
-    options.signal?.addEventListener('abort', onOuterAbort);
-    let res: Response;
+    options.signal?.addEventListener('abort', onOuterAbort, { once: true });
     try {
       // No cookies or credentials; the request carries only the rounded coordinates.
-      res = await fetchImpl(url, { signal: controller.signal, credentials: 'omit', cache: 'no-store' });
+      const res = await fetchImpl(url, { signal: controller.signal, credentials: 'omit', cache: 'no-store' });
+      if (res.status === 429) throw new WeatherError('rateLimited', 'Rate limited', 429);
+      if (!res.ok) throw new WeatherError('http', `HTTP ${res.status}`, res.status);
+      let body: unknown;
+      try {
+        body = await res.json();
+      } catch (e) {
+        if (controller.signal.aborted) throw e;
+        throw new WeatherError('malformed', 'Invalid JSON');
+      }
+      if (controller.signal.aborted) throw new WeatherError('aborted', 'Weather request cancelled');
+      return parseOpenMeteoResponse(body, location, now());
     } catch (e) {
       if (timedOut) throw new WeatherError('timeout', 'Weather request timed out');
+      if (options.signal?.aborted) throw new WeatherError('aborted', 'Weather request cancelled');
+      if (e instanceof WeatherError) throw e;
       if (typeof navigator !== 'undefined' && navigator.onLine === false)
         throw new WeatherError('offline', 'Device is offline');
       throw new WeatherError('unknown', e instanceof Error ? e.message : 'Network error');
@@ -166,14 +179,5 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       clearTimeout(timer);
       options.signal?.removeEventListener('abort', onOuterAbort);
     }
-    if (res.status === 429) throw new WeatherError('rateLimited', 'Rate limited', 429);
-    if (!res.ok) throw new WeatherError('http', `HTTP ${res.status}`, res.status);
-    let body: unknown;
-    try {
-      body = await res.json();
-    } catch {
-      throw new WeatherError('malformed', 'Invalid JSON');
-    }
-    return parseOpenMeteoResponse(body, location, now());
   }
 }

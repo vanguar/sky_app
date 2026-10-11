@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { LANGUAGES, RESOURCES, detectBrowserLanguage, languageDirection } from './languages';
+import { LANGUAGES, detectBrowserLanguage, languageDirection } from './languages';
+import { RESOURCES } from './resources';
+import SEARCH_NAMES from '../features/search/search-names.json';
 
 type Json = { [k: string]: string | Json };
 
@@ -20,6 +22,20 @@ describe('localization', () => {
 
   it('ships all eight languages', () => {
     expect(LANGUAGES.map((l) => l.code).sort()).toEqual(['ar', 'de', 'en', 'es', 'fr', 'it', 'ru', 'uk']);
+  });
+
+  it('keeps every translated object name available for offline multilingual search', () => {
+    const expected = Object.fromEntries(
+      Object.entries(RESOURCES).map(([code, dictionary]) => [
+        code,
+        {
+          bodies: dictionary.bodies,
+          messierNames: dictionary.messierNames,
+          meteors: { names: dictionary.meteors.names },
+        },
+      ]),
+    );
+    expect(SEARCH_NAMES).toEqual(expected);
   });
 
   for (const lang of LANGUAGES) {

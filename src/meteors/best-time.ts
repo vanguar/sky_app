@@ -84,8 +84,12 @@ export function planMeteorNight(
   observer: Observer,
   samples: SkySample[],
   weatherHours: WeatherHour[] | null,
+  nightEnd?: number,
 ): MeteorNightPlan {
-  const slots = samples.map((s) => evaluateMeteorAt(svc, def, observer, s, weatherHours));
+  const slots = samples.map((s) => ({
+    ...evaluateMeteorAt(svc, def, observer, s, weatherHours),
+    end: Math.min(s.time + METEOR_STEP_MS, nightEnd ?? Infinity),
+  }));
   return bestFromSlots(slots, METEOR_STEP_MS);
 }
 

@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../../app/providers/PlatformProvider';
 import { Icon } from '../../components/Icon';
 import { useSettingsStore } from '../../store/settings-store';
-import { LanguageSelect } from '../settings/SettingsSheet';
+import { LanguageSelect } from '../settings/LanguageSelect';
 import { LocationForm } from '../settings/LocationForm';
 import { enableSensorMode } from '../sky/sensor-mode';
+import { useDialogFocus } from '../../utils/use-dialog-focus';
 
 type Step = 'welcome' | 'language' | 'location' | 'sensors';
 
 /** Short first-run flow: welcome → (language) → location → optional sensors → sky. */
 export function Onboarding({ askLanguage }: { askLanguage: boolean }) {
   const { t } = useTranslation();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, true);
   const platform = usePlatform();
   const complete = useSettingsStore((s) => s.completeOnboarding);
   const steps: Step[] = askLanguage
@@ -24,6 +27,8 @@ export function Onboarding({ askLanguage }: { askLanguage: boolean }) {
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       className="onboarding"
       role="dialog"
       aria-modal="true"

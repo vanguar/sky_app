@@ -138,13 +138,7 @@ export function assessWeather(h: WeatherHour): ObservingConditionsResult {
     else reasons.push('overcast');
     const low = h.cloudCoverLow ?? 0;
     const mid = h.cloudCoverMid ?? 0;
-    if (
-      cloud > 30 &&
-      h.cloudCoverHigh != null &&
-      h.cloudCoverHigh >= cloud - 5 &&
-      low < 15 &&
-      mid < 15
-    ) {
+    if (cloud > 30 && h.cloudCoverHigh != null && h.cloudCoverHigh >= cloud - 5 && low < 15 && mid < 15) {
       // Mostly thin high cloud: bright objects usually shine through, faint ones do not.
       reasons.push('highCloudsOnly');
       score = Math.min(100, score + 8);
@@ -271,6 +265,8 @@ export function assessObserving(
 export interface ScoredSlot {
   /** Start of the slot, epoch ms. */
   time: number;
+  /** Explicit end for partial slots at the boundaries of the remaining night. */
+  end?: number;
   score: number;
 }
 
@@ -286,13 +282,9 @@ export interface BestWindow {
 /**
  * Best continuous window: maximal runs of consecutive slots with score ≥ `threshold`; the run with
  * the largest total score above the threshold wins (long good windows beat a single great hour).
- * Never returns a window finer than the input step.
+ * Partial boundary slots are weighted by their duration.
  */
-export function findBestWindow(
-  slots: ScoredSlot[],
-  stepMs: number,
-  threshold: number,
-): BestWindow | null {
+export function findBestWindow(slots: ScoredSlot[], stepMs: number, threshold: number): BestWindow | null {
   let best: BestWindow | null = null;
   let bestWeight = -Infinity;
   let i = 0;
@@ -303,25 +295,28 @@ export function findBestWindow(
     }
     let j = i;
     let sum = 0;
+    let duration = 0;
     let max = 0;
     let weight = 0;
     while (
       j < slots.length &&
       slots[j].score >= threshold &&
-      (j === i || slots[j].time - slots[j - 1].time <= stepMs * 1.01)
+      (j === i || slots[j].time <= (slots[j - 1].end ?? slots[j - 1].time + stepMs) + 1)
     ) {
-      sum += slots[j].score;
+      const fraction = Math.max(0, ((slots[j].end ?? slots[j].time + stepMs) - slots[j].time) / stepMs);
+      sum += slots[j].score * fraction;
+      duration += fraction;
       max = Math.max(max, slots[j].score);
-      weight += slots[j].score - threshold + 1;
+      weight += (slots[j].score - threshold + 1) * fraction;
       j++;
     }
-    if (weight > bestWeight) {
+    if (duration > 0 && weight > bestWeight) {
       bestWeight = weight;
       best = {
         start: slots[i].time,
-        end: slots[j - 1].time + stepMs,
+        end: slots[j - 1].end ?? slots[j - 1].time + stepMs,
         score: max,
-        meanScore: Math.round(sum / (j - i)),
+        meanScore: Math.round(sum / duration),
       };
     }
     i = j;

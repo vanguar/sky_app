@@ -8,6 +8,8 @@ import { formatNumber } from '../../utils/format';
 import { assetUrl } from '../../utils/asset-url';
 import { createProceduralTexture, createRingTexture } from './procedural-textures';
 import { latLonToSphere } from './globe-math';
+import { useDialogFocus } from '../../utils/use-dialog-focus';
+import { ResourceScope } from './resource-scope';
 
 /** Bodies with a bundled public-domain map (see docs/DATA_SOURCES.md). */
 const PHOTO_MAPS: Partial<Record<GlobeId, string>> = {
@@ -31,6 +33,7 @@ const HD_ZOOM_FACTOR = 0.7;
 
 /** One revolution in ~30 s — clearly visible, still calm. */
 const AUTO_ROTATE_RAD_PER_SEC = (2 * Math.PI) / 30;
+const FRAME_INTERVAL_MS = 1000 / 30;
 
 /** Axial tilt (degrees) for a natural-looking globe. */
 const AXIAL_TILT: Partial<Record<GlobeId, number>> = {
@@ -57,6 +60,9 @@ interface Props {
 /** Reusable 3D globe viewer: rotate, pinch-zoom, reset, optional auto-rotation and landmarks. */
 export default function Planet3DViewer({ body, name, onClose }: Props) {
   const { t, i18n } = useTranslation();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, true, onClose);
+  const invalidateRef = useRef<(() => void) | null>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -75,10 +81,22 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    let disposed = false;
+    let contextLost = false;
+    let raf = 0;
+    let lastT = 0;
+    const invalidate = () => {
+      if (!disposed && !contextLost && !document.hidden && !raf)
+        raf = requestAnimationFrame((time) => loop(time));
+    };
+    invalidateRef.current = invalidate;
+    setStatus('loading');
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
+      disposed = true;
+      invalidateRef.current = null;
       setStatus('error');
       return;
     }
@@ -106,13 +124,17 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
     const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), material);
     spinGroup.add(globe);
 
-    const disposables: { dispose(): void }[] = [globe.geometry, material];
+    const resources = new ResourceScope();
+    resources.own(globe.geometry);
+    resources.own(material);
     const applyProceduralTexture = () => {
+      if (disposed) return;
       const tex = new THREE.CanvasTexture(createProceduralTexture(body));
       tex.colorSpace = THREE.SRGBColorSpace;
       material.map = tex;
       material.needsUpdate = true;
-      disposables.push(tex);
+      resources.own(tex);
+      invalidate();
     };
 
     const photo = PHOTO_MAPS[body];
@@ -123,9 +145,12 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
         loader.load(
           assetUrl(`textures/planets/${file}`),
           (tex) => {
+            if (!resources.own(tex)) {
+              reject(new Error('Viewer closed'));
+              return;
+            }
             if (color) tex.colorSpace = THREE.SRGBColorSpace;
             tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-            disposables.push(tex);
             resolve(tex);
           },
           undefined,
@@ -133,11 +158,23 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
         ),
       );
     /** Swaps in colour (and relief) maps of a given resolution. */
+    let mapGeneration = 0;
     const applyMaps = async (size: '1k' | '2k' | '4k') => {
-      const [map, bump] = await Promise.all([
+      const generation = ++mapGeneration;
+      const results = await Promise.allSettled([
         loadTexture(`${photo}-${size}.jpg`, true),
         hasBump ? loadTexture(`${photo}-bump-${size === '1k' ? '2k' : size}.jpg`, false) : null,
       ]);
+      if (
+        disposed ||
+        generation !== mapGeneration ||
+        results.some((result) => result.status === 'rejected')
+      ) {
+        for (const result of results) if (result.status === 'fulfilled') resources.release(result.value);
+        throw new Error('Texture load failed or superseded');
+      }
+      const map = (results[0] as PromiseFulfilledResult<THREE.Texture>).value;
+      const bump = (results[1] as PromiseFulfilledResult<THREE.Texture | null>).value;
       const oldMap = material.map;
       const oldBump = material.bumpMap;
       material.map = map;
@@ -146,23 +183,32 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
         material.bumpScale = BUMP_SCALE;
       }
       material.needsUpdate = true;
-      if (oldMap && oldMap !== map) oldMap.dispose();
-      if (oldBump && oldBump !== bump) oldBump.dispose();
+      if (oldMap !== map) resources.release(oldMap);
+      if (oldBump !== bump) resources.release(oldBump);
+      invalidate();
     };
     // High-resolution maps are fetched only when the user zooms in (and the GPU supports 4096 px).
     let hdState: 'none' | 'loading' | 'done' =
       photo && renderer.capabilities.maxTextureSize >= 4096 ? 'none' : 'done';
+    let textureStatus: 'loading' | 'ready' | 'fallback' = 'loading';
 
     if (photo) {
       applyMaps(preferSmallTextures() ? '1k' : '2k')
-        .then(() => setStatus('ready'))
+        .then(() => {
+          if (disposed) return;
+          textureStatus = 'ready';
+          if (!contextLost) setStatus(textureStatus);
+        })
         .catch(() => {
+          if (disposed || mapGeneration !== 1) return;
           applyProceduralTexture();
-          setStatus('fallback');
+          textureStatus = 'fallback';
+          if (!contextLost) setStatus(textureStatus);
           hdState = 'done';
         });
     } else {
       applyProceduralTexture();
+      textureStatus = 'ready';
       setStatus('ready');
     }
 
@@ -190,7 +236,7 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = -Math.PI / 2;
       tiltGroup.add(ring);
-      disposables.push(ringGeo, ringMat, ringTex);
+      for (const resource of [ringGeo, ringMat, ringTex]) resources.own(resource);
     }
 
     // Landmark markers (scaled each frame to keep a constant on-screen size).
@@ -204,7 +250,8 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
       dot.position.copy(p);
       spinGroup.add(dot);
       dots.push(dot);
-      disposables.push(dot.geometry, dot.material as THREE.Material);
+      resources.own(dot.geometry);
+      resources.own(dot.material as THREE.Material);
       return { lm, p };
     });
 
@@ -216,6 +263,7 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
     // Auto-rotation spins the globe about its own axis (see loop), not the camera.
     controls.autoRotate = false;
     controls.saveState();
+    controls.addEventListener('change', invalidate);
     controlsRef.current = controls;
 
     const resize = () => {
@@ -237,6 +285,7 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
         fitDistance = camera.position.length();
         fitted = w > 1 && h > 1;
       }
+      invalidate();
     };
     let fitted = false;
     let fitDistance = camera.position.length();
@@ -250,21 +299,32 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
     const order: number[] = [];
     const facingDot = new Float32Array(markers.length);
     const labelWidth = new Float32Array(markers.length);
-    let raf = 0;
-    let lastT = performance.now();
     const loop = (now = performance.now()) => {
-      raf = requestAnimationFrame(loop);
-      const dt = Math.min(0.1, Math.max(0, (now - lastT) / 1000));
+      raf = 0;
+      if (disposed || document.hidden || contextLost) return;
+      if (lastT && now - lastT < FRAME_INTERVAL_MS) {
+        invalidate();
+        return;
+      }
+      const dt = lastT ? Math.min(0.1, Math.max(0, (now - lastT) / 1000)) : 0;
       lastT = now;
       if (autoRotateRef.current) spinGroup.rotation.y += AUTO_ROTATE_RAD_PER_SEC * dt;
-      controls.update();
+      const moving = controls.update();
       const dotScale = Math.max(0.08, (camera.position.length() - 1) / Math.max(0.01, fitDistance - 1));
       for (const d of dots) d.scale.setScalar(dotScale);
       renderer.render(scene, camera);
-      if (hdState === 'none' && camera.position.length() < fitDistance * HD_ZOOM_FACTOR) {
+      if (
+        textureStatus !== 'loading' &&
+        hdState === 'none' &&
+        camera.position.length() < fitDistance * HD_ZOOM_FACTOR
+      ) {
         hdState = 'loading';
         void applyMaps('4k')
-          .then(() => (hdState = 'done'))
+          .then(() => {
+            hdState = 'done';
+            textureStatus = 'ready';
+            if (!disposed && !contextLost) setStatus(textureStatus);
+          })
           .catch(() => (hdState = 'done'));
       }
       const labels = labelsRef.current;
@@ -303,15 +363,41 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
           if (visible) el.style.transform = `translate(${x}px, ${y}px)`;
         }
       }
+      if (autoRotateRef.current || moving) invalidate();
     };
-    loop();
+    const onVisibility = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      lastT = 0;
+      invalidate();
+    };
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      contextLost = true;
+      setStatus('error');
+      onVisibility();
+    };
+    const onContextRestored = () => {
+      contextLost = false;
+      setStatus(textureStatus);
+      onVisibility();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    renderer.domElement.addEventListener('webglcontextlost', onContextLost);
+    renderer.domElement.addEventListener('webglcontextrestored', onContextRestored);
+    invalidate();
 
     return () => {
+      disposed = true;
+      invalidateRef.current = null;
       cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', onVisibility);
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
       ro.disconnect();
       controls.dispose();
       controlsRef.current = null;
-      disposables.forEach((d) => d.dispose());
+      resources.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
@@ -320,21 +406,22 @@ export default function Planet3DViewer({ body, name, onClose }: Props) {
   }, [body]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    invalidateRef.current?.();
+  }, [autoRotate, showLandmarks]);
 
   if (!hasGlobe(body)) return null;
   const sat = isMoonId(body) ? SATELLITES[body] : null;
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       className="viewer3d"
       role="dialog"
       aria-modal="true"
       aria-label={t('planet3d.title', { name })}
       data-testid="planet-3d"
+      data-status={status}
     >
       <div className="viewer3d-canvas" ref={hostRef} />
       <div className="viewer3d-labels" ref={labelsRef} aria-hidden="true">

@@ -28,6 +28,8 @@ interface WeatherState {
 const sameQuery = (a: WeatherQueryLocation | null, b: WeatherQueryLocation) =>
   !!a && weatherLocationKey(a) === weatherLocationKey(b);
 
+let requestGeneration = 0;
+
 export const useWeatherStore = create<WeatherState>()((set, get) => ({
   status: 'idle',
   forecast: null,
@@ -36,7 +38,8 @@ export const useWeatherStore = create<WeatherState>()((set, get) => ({
   hydrate: (service, exact) => {
     const query = service.queryLocationFor(exact);
     const s = get();
-    if (sameQuery(s.queryLocation, query) && s.forecast) return;
+    if (sameQuery(s.queryLocation, query)) return;
+    requestGeneration++;
     const cached = service.peek(exact);
     set({
       queryLocation: query,
@@ -46,13 +49,14 @@ export const useWeatherStore = create<WeatherState>()((set, get) => ({
     });
   },
   refresh: async (service, exact, force = false) => {
+    const generation = ++requestGeneration;
     const query = service.queryLocationFor(exact);
     const prev = get();
     const keep = sameQuery(prev.queryLocation, query) ? prev.forecast : null;
     set({ status: 'loading', queryLocation: query, forecast: keep, error: null });
     const result = await service.load(exact, { force });
     // Ignore results for a location the user has meanwhile changed.
-    if (!sameQuery(get().queryLocation, query)) return;
+    if (generation !== requestGeneration || !sameQuery(get().queryLocation, query)) return;
     if (result.status === 'ready') {
       set({ status: 'ready', forecast: result.forecast, error: null });
     } else if (result.status === 'fallback') {
@@ -61,5 +65,8 @@ export const useWeatherStore = create<WeatherState>()((set, get) => ({
       set({ status: 'error', forecast: null, error: result.error });
     }
   },
-  reset: () => set({ status: 'idle', forecast: null, error: null, queryLocation: null }),
+  reset: () => {
+    requestGeneration++;
+    set({ status: 'idle', forecast: null, error: null, queryLocation: null });
+  },
 }));

@@ -22,3 +22,12 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e
+        env:
+          E2E_SKIP_BUILD: '1'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-failures
+          path: test-results/

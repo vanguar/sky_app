@@ -19,13 +19,16 @@ this base, so the same code works at `/` and under a sub-path.
 
 Workflow: [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml), triggered on push to `main`
 and manually (`workflow_dispatch`). Steps: checkout → Node 20 → `npm ci` → lint → typecheck → unit tests →
-`npm run build:pages` (with `PAGES_REPO_NAME` = repository name) → `configure-pages` → `upload-pages-artifact` →
+`npm run build:pages` (with `PAGES_REPO_NAME` = repository name) → Playwright Chromium/WebKit against that
+build and its repository base path → `configure-pages` → `upload-pages-artifact` →
 `deploy-pages`. Uses `concurrency: pages` to avoid overlapping deployments.
 
 One-time setting (done automatically via the GitHub API by the maintainer, or manually):
 **Settings → Pages → Build and deployment → Source → GitHub Actions.**
 
 Forks with a different repository name work automatically because the workflow passes the repository name.
+Failed browser tests block publication; failure traces are uploaded as workflow artifacts.
+See [TESTING.md](TESTING.md) for local commands and the physical-device checklist.
 
 ## Vercel
 

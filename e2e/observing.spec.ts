@@ -54,7 +54,11 @@ async function start(page: Page, settings: Record<string, unknown> = {}) {
 }
 
 test.describe('observing conditions (weather)', () => {
-  test('asks before sending coordinates, then shows score, clouds, humidity and best window', async ({ page }) => {
+  // Browser routing cannot intercept requests made by an active service worker after reload.
+  test.use({ serviceWorkers: 'block' });
+  test('asks before sending coordinates, then shows score, clouds, humidity and best window', async ({
+    page,
+  }) => {
     const requests = await mockWeatherOk(page);
     await start(page);
     await page.getByTestId('open-tonight').click();
@@ -132,7 +136,9 @@ test.describe('meteor showers', () => {
     await expect(card.getByTestId('meteor-moon-impact')).toBeVisible();
     await expect(card.getByTestId('meteor-grade')).toBeVisible();
     await expect(card.getByTestId('meteor-weather-unknown')).toHaveCount(0);
-    await expect(card.getByTestId('meteor-best-window').or(card.getByTestId('meteor-best-none'))).toBeVisible();
+    await expect(
+      card.getByTestId('meteor-best-window').or(card.getByTestId('meteor-best-none')),
+    ).toBeVisible();
     await expect(card).not.toContainText(/you will see \d+/i);
 
     await card.getByTestId('meteor-find-radiant').click();
@@ -196,7 +202,10 @@ test.describe('localization of the new screens', () => {
 });
 
 test.describe('offline', () => {
-  test('meteor catalog works offline; weather says a fresh forecast is unavailable', async ({ page, context }) => {
+  test('meteor catalog works offline; weather says a fresh forecast is unavailable', async ({
+    page,
+    context,
+  }) => {
     await page.clock.setFixedTime(NOW);
     await seedSettings(page, { weatherEnabled: true });
     await page.route(OPEN_METEO, (route) => route.abort('internetdisconnected'));
@@ -229,7 +238,9 @@ test.describe('responsive layout', () => {
       await mockWeatherOk(page);
       await start(page, { weatherEnabled: true });
       const noOverflow = async () =>
-        expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+        ).toBeLessThanOrEqual(0);
       await expect(page.getByTestId('open-tonight')).toBeVisible();
       await noOverflow();
       await page.getByTestId('open-tonight').click();

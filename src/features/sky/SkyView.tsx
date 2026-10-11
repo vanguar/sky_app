@@ -15,7 +15,8 @@ import { useSkyStore } from '../../store/sky-store';
 import { useUiStore } from '../../store/ui-store';
 import { useObserver } from '../../utils/use-observer';
 import { usePlatform } from '../../app/providers/PlatformProvider';
-import { computeSolarSnapshot, eqjVectorOf, type SolarSnapshot } from './solar-items';
+import { computeSolarSnapshot, eqjVectorOf } from './solar-items';
+import { useDocumentVisible } from '../../utils/use-document-visible';
 import { skyBridge } from './sky-bridge';
 import { isMeteorObjectId } from '../../meteors/catalog';
 import { radiantRenderItems } from '../../meteors/sky-items';
@@ -48,8 +49,10 @@ export function SkyView() {
   const platform = usePlatform();
   const hostRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<SkyRenderer | null>(null);
-  const snapshotRef = useRef<SolarSnapshot | null>(null);
   const [webglError, setWebglError] = useState(false);
+  const [rendererVersion, setRendererVersion] = useState(0);
+  const viewerOpen = useUiStore((s) => s.viewer3d !== null);
+  const documentVisible = useDocumentVisible();
 
   const catalog = useCatalogStore((s) => s.catalog);
   const layers = useSkyStore((s) => s.layers);
@@ -97,6 +100,7 @@ export function SkyView() {
           }
         },
         onContextLost: () => setWebglError(true),
+        onContextRestored: () => setWebglError(false),
       });
     } catch (e) {
       if (e instanceof WebGLUnavailableError || e instanceof Error) {
@@ -107,29 +111,30 @@ export function SkyView() {
       throw e;
     }
     rendererRef.current = renderer;
+    setWebglError(false);
     skyBridge.setRenderer(renderer);
     return () => {
       skyBridge.setRenderer(null);
       rendererRef.current = null;
       renderer.dispose();
     };
-  }, [platform]);
+  }, [platform, rendererVersion]);
 
   useEffect(() => {
     if (catalog) rendererRef.current?.setCatalog(catalog);
-  }, [catalog]);
+  }, [catalog, rendererVersion]);
 
   useEffect(() => {
     rendererRef.current?.setLayers(layers);
-  }, [layers]);
+  }, [layers, rendererVersion]);
 
   useEffect(() => {
     rendererRef.current?.setShowLabels(showLabels);
-  }, [showLabels]);
+  }, [showLabels, rendererVersion]);
 
   useEffect(() => {
     rendererRef.current?.setBrightness(brightness);
-  }, [brightness]);
+  }, [brightness, rendererVersion]);
 
   useEffect(() => {
     platform.orientation.setSmoothing(smoothing);
@@ -142,17 +147,21 @@ export function SkyView() {
     r.setLabelTexts(buildLabelTexts(catalog, t, lang));
     r.canvas.setAttribute('role', 'application');
     r.canvas.setAttribute('aria-label', t('modes.skyMap'));
-  }, [catalog, t, lang]);
+  }, [catalog, t, lang, rendererVersion]);
+
+  useEffect(() => {
+    rendererRef.current?.setSuspended(viewerOpen);
+  }, [viewerOpen, rendererVersion]);
 
   // Astronomy tick: observer frame + Solar System positions (1 Hz), selection & navigation vectors.
   useEffect(() => {
+    if (!documentVisible || viewerOpen || webglError) return;
     const tick = () => {
       const r = rendererRef.current;
       if (!r) return;
       const date = platform.time.now();
       r.setEqjToWorld(platform.astronomy.getEqjToWorldMatrix(date, observer));
-      const snapshot = computeSolarSnapshot(date, observer);
-      snapshotRef.current = snapshot;
+      const snapshot = computeSolarSnapshot(date, observer, platform.astronomy);
       r.setSolarItems(snapshot.items);
       const sun = snapshot.positions.find((p) => p.id === 'sun');
       r.setDaylight(sun ? daylightFactor(sun.horizontal.altitude) : 0);
@@ -172,19 +181,33 @@ export function SkyView() {
       clearInterval(id);
       off();
     };
-  }, [platform, observer, catalog, selectedId, navigationTargetId, visibleNow, layers.meteors]);
-
-  if (webglError) {
-    return (
-      <div className="sky-error" role="alert">
-        <p>{t('errors.webgl')}</p>
-      </div>
-    );
-  }
+  }, [
+    platform,
+    observer,
+    catalog,
+    selectedId,
+    navigationTargetId,
+    visibleNow,
+    layers.meteors,
+    documentVisible,
+    viewerOpen,
+    webglError,
+    rendererVersion,
+  ]);
 
   return (
-    <div className="sky-host" ref={hostRef} data-testid="sky-view">
-      <span className="sr-only">{t('modes.skyMap')}</span>
-    </div>
+    <>
+      <div className="sky-host" ref={hostRef} data-testid="sky-view">
+        <span className="sr-only">{t('modes.skyMap')}</span>
+      </div>
+      {webglError && (
+        <div className="sky-error glass" role="alert">
+          <p>{t('errors.webgl')}</p>
+          <button type="button" className="btn" onClick={() => setRendererVersion((version) => version + 1)}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+    </>
   );
 }

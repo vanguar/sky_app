@@ -54,10 +54,10 @@ export function buildTonightModel(
 ): TonightModel {
   const night = findNightSpan(svc, observer, now);
   const samples = night
-    ? sampleSky(svc, observer, Math.max(floorTo(night.start, METEOR_STEP_MS), floorTo(now, METEOR_STEP_MS)), night.end, METEOR_STEP_MS)
+    ? sampleSky(svc, observer, Math.max(night.start, now), night.end, METEOR_STEP_MS)
     : [];
   const currentHourStart = floorTo(now, HOUR);
-  const weatherHours = forecast ? forecast.hours.filter((h) => h.time >= currentHourStart) : null;
+  const weatherHours = forecast ? forecast.hours.filter((h) => h.time + HOUR > now) : null;
   const usable = weatherHours && weatherHours.length > 0 ? weatherHours : null;
 
   const currentHour = usable ? hourAt(usable, now) : null;
@@ -76,8 +76,12 @@ export function buildTonightModel(
   let bestWindowMediocre = false;
   if (night && hourly.length) {
     const inNight = hourly
-      .filter((h) => h.time + HOUR > night.start && h.time < night.end)
-      .map((h) => ({ time: h.time, score: h.observing.score }));
+      .filter((h) => h.time + HOUR > Math.max(now, night.start) && h.time < night.end)
+      .map((h) => ({
+        time: Math.max(h.time, now, night.start),
+        end: Math.min(h.time + HOUR, night.end),
+        score: h.observing.score,
+      }));
     bestWindow = findBestWindow(inNight, HOUR, GOOD_WINDOW_SCORE);
     if (!bestWindow) {
       bestWindow = findBestWindow(inNight, HOUR, FAIR_WINDOW_SCORE);

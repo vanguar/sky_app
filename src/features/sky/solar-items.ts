@@ -1,4 +1,4 @@
-import { astronomyService } from '../../astronomy/astronomy.service';
+import type { AstronomyService } from '../../astronomy/astronomy.service';
 import { practicalVisibility } from '../../astronomy/naked-eye';
 import { raDecToVector } from '../../astronomy/coordinate-transform';
 import { SOLAR_BODY_IDS, type Observer, type SolarBodyPosition, type Vec3 } from '../../astronomy/types';
@@ -12,8 +12,12 @@ export interface SolarSnapshot {
 }
 
 /** Computes all Sun/Moon/planet positions for the renderer (≈1 Hz). */
-export function computeSolarSnapshot(date: Date, observer: Observer): SolarSnapshot {
-  const positions = SOLAR_BODY_IDS.map((id) => astronomyService.getBodyPosition(id, date, observer));
+export function computeSolarSnapshot(
+  date: Date,
+  observer: Observer,
+  astronomy: AstronomyService,
+): SolarSnapshot {
+  const positions = SOLAR_BODY_IDS.map((id) => astronomy.getBodyPosition(id, date, observer));
   const sunAltitude = positions.find((p) => p.id === 'sun')?.horizontal.altitude ?? -90;
   const items = positions.map((p) => ({
     id: p.id,

@@ -6,6 +6,7 @@ import { useWeatherStore } from '../../store/weather-store';
 import { resolveObserverTimeZone, type ObserverTimeZone } from '../../utils/time-zone';
 import { useNow } from '../../utils/use-now';
 import { useObserver } from '../../utils/use-observer';
+import { useDocumentVisible } from '../../utils/use-document-visible';
 import { buildTonightModel, type TonightModel } from './tonight-model';
 
 /**
@@ -35,6 +36,7 @@ export function useWeather({ fetch }: { fetch: boolean }) {
   }, [enabled, fetch, lat, lon, platform]);
 
   const retry = useCallback(() => {
+    if (!useSettingsStore.getState().weatherEnabled) return;
     void useWeatherStore.getState().refresh(platform.weather, { latitude: lat, longitude: lon }, true);
   }, [platform, lat, lon]);
 
@@ -59,7 +61,9 @@ export function useObserverTimeZone(): ObserverTimeZone {
     () =>
       resolveObserverTimeZone(
         loc,
-        zone && fLat != null && fLon != null ? { timeZone: zone, location: { latitude: fLat, longitude: fLon } } : null,
+        zone && fLat != null && fLon != null
+          ? { timeZone: zone, location: { latitude: fLat, longitude: fLon } }
+          : null,
       ),
     [loc, zone, fLat, fLon],
   );
@@ -83,14 +87,17 @@ const EMPTY_MODEL: TonightModel = {
 export function useTonight(enabled = true): TonightModel {
   const platform = usePlatform();
   const observer = useObserver();
-  const now = useNow(60_000);
+  const visible = useDocumentVisible();
+  const active = enabled && visible;
+  const now = useNow(60_000, active);
   const bucket = Math.floor(now.getTime() / 600_000);
   const storeForecast = useWeatherStore((s) => s.forecast);
   const weatherEnabled = useSettingsStore((s) => s.weatherEnabled);
   const forecast = weatherEnabled ? storeForecast : null;
   return useMemo(
-    () => (enabled ? buildTonightModel(platform.astronomy, observer, platform.time.nowMs(), forecast) : EMPTY_MODEL),
+    () =>
+      active ? buildTonightModel(platform.astronomy, observer, platform.time.nowMs(), forecast) : EMPTY_MODEL,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [enabled, platform, observer, bucket, forecast],
+    [active, platform, observer, bucket, forecast],
   );
 }

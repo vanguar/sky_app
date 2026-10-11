@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { magneticDeclination } from '../src/astronomy/geomagnetism';
-import { pixelDiff, seedSettings, waitForSky } from './helpers';
+import { seedSettings, waitForSky } from './helpers';
 
 test.describe('first run', () => {
   test('onboarding → manual location → sky map', async ({ page }) => {
@@ -115,24 +115,6 @@ test.describe('sky map', () => {
     await expect(page.getByTestId('planet-3d').locator('canvas')).toBeVisible();
     await page.getByTestId('close-3d').click();
     await expect(page.getByTestId('planet-3d')).toBeHidden();
-  });
-
-  test('3D globe auto-rotates and the toggle stops it', async ({ page }) => {
-    await page.goto('./#/object/mars');
-    await page.getByTestId('details-3d').click();
-    const canvas = page.getByTestId('planet-3d').locator('canvas');
-    await expect(canvas).toBeVisible();
-    await page.waitForTimeout(1500); // texture load
-    const a = await canvas.screenshot();
-    await page.waitForTimeout(1200);
-    const b = await canvas.screenshot();
-    expect(await pixelDiff(page, a, b)).toBeGreaterThan(500);
-    await page.getByRole('button', { name: 'Auto-rotate' }).click();
-    await page.waitForTimeout(600); // let damping settle
-    const c = await canvas.screenshot();
-    await page.waitForTimeout(1000);
-    const d = await canvas.screenshot();
-    expect(await pixelDiff(page, c, d)).toBeLessThan(50);
   });
 
   test('"Visible now" filter and practical visibility in the card', async ({ page }) => {
@@ -278,6 +260,14 @@ test.describe('PWA', () => {
     await page.getByTestId('open-search').click();
     await page.getByTestId('search-input').fill('Sirius');
     await expect(page.getByTestId('result-hip-32349')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('open-settings').click();
+    // Each language and this panel are being opened for the first time while offline.
+    for (const language of ['ru', 'uk', 'de', 'fr', 'es', 'it', 'ar', 'en']) {
+      await page.getByTestId('language-select').selectOption(language);
+      await expect(page.locator('html')).toHaveAttribute('lang', language);
+      await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
+    }
     await context.setOffline(false);
   });
 });

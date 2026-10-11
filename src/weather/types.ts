@@ -66,7 +66,8 @@ export interface WeatherProvider {
   getForecast(location: WeatherQueryLocation, options?: ForecastOptions): Promise<WeatherForecast>;
 }
 
-export type WeatherErrorKind = 'offline' | 'timeout' | 'http' | 'rateLimited' | 'malformed' | 'unknown';
+export type WeatherErrorKind =
+  'offline' | 'timeout' | 'aborted' | 'http' | 'rateLimited' | 'malformed' | 'unknown';
 
 export class WeatherError extends Error {
   readonly kind: WeatherErrorKind;

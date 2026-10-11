@@ -30,6 +30,7 @@ export interface SkyRendererEvents {
   onUserInteract?(): void;
   onFrameInfo?(info: FrameInfo): void;
   onContextLost?(): void;
+  onContextRestored?(): void;
 }
 
 const NIGHT_SKY = new THREE.Color('#02030a');
@@ -77,6 +78,8 @@ export class SkyRenderer {
   private lastFrameInfoAt = 0;
   private readonly events: SkyRendererEvents;
   private disposed = false;
+  private suspended = false;
+  private contextLost = false;
   private readonly tmpV = new THREE.Vector3();
   private readonly tmpV2 = new THREE.Vector3();
   private readonly fwd = new THREE.Vector3();
@@ -100,7 +103,7 @@ export class SkyRenderer {
     this.root.append(this.renderer.domElement, this.labels.canvas);
     container.append(this.root);
     this.renderer.domElement.addEventListener('webglcontextlost', this.onContextLost, false);
-    this.renderer.domElement.addEventListener('webglcontextrestored', this.invalidate, false);
+    this.renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored, false);
 
     this.cam = new SkyCamera(1);
     this.cam.reducedMotion =
@@ -129,7 +132,7 @@ export class SkyRenderer {
     this.resizeObserver.observe(container);
     this.resize();
     document.addEventListener('visibilitychange', this.onVisibility);
-    this.raf = requestAnimationFrame(this.loop);
+    this.onVisibility();
   }
 
   get canvas(): HTMLCanvasElement {
@@ -327,7 +330,7 @@ export class SkyRenderer {
   }
 
   private onVisibility = () => {
-    if (document.hidden) {
+    if (document.hidden || this.suspended || this.contextLost) {
       cancelAnimationFrame(this.raf);
       this.raf = 0;
     } else if (!this.raf && !this.disposed) {
@@ -339,8 +342,22 @@ export class SkyRenderer {
 
   private onContextLost = (e: Event) => {
     e.preventDefault();
+    this.contextLost = true;
+    this.onVisibility();
     this.events.onContextLost?.();
   };
+
+  private onContextRestored = () => {
+    this.contextLost = false;
+    this.invalidate();
+    this.events.onContextRestored?.();
+    this.onVisibility();
+  };
+
+  setSuspended(suspended: boolean): void {
+    this.suspended = suspended;
+    this.onVisibility();
+  }
 
   private loop = (t: number) => {
     if (this.disposed) return;
@@ -460,7 +477,7 @@ export class SkyRenderer {
     this.controls.dispose();
     this.sky.dispose();
     this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost);
-    this.renderer.domElement.removeEventListener('webglcontextrestored', this.invalidate);
+    this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.renderer.dispose();
     this.root.remove();
   }

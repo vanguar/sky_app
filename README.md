@@ -64,7 +64,8 @@ npm run dev          # http://localhost:5173
 | `npm run build:pages` | Production build for GitHub Pages (base `/sky_app/`) |
 | `npm run preview` | Serve the production build |
 | `npm run test` | Unit tests (Vitest) |
-| `npm run test:e2e` | E2E tests (Playwright, mobile Chromium; run `npx playwright install chromium` once) |
+| `npm run test:e2e` | E2E tests (mobile Chromium + WebKit smoke; run `npx playwright install chromium webkit` once) |
+| `npm run i18n:names` | Regenerate multilingual search names after editing translations |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript |
 | `npm run catalogs` | Regenerate `public/catalogs/*` from `data/source/*` |
 

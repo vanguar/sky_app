@@ -4,9 +4,7 @@ import { calibrateHeadingOffset } from '../../sensors/calibration';
 import { Sheet } from '../../components/Sheet';
 import { Toggle } from '../../components/Toggle';
 import { resolveObject, targetOf } from '../../catalog/object-registry';
-import type { LanguageCode } from '../../catalog/types';
-import { changeLanguage } from '../../i18n';
-import { LANGUAGES } from '../../i18n/languages';
+import { LanguageSelect } from './LanguageSelect';
 import { useCatalogStore } from '../../store/catalog-store';
 import { useSettingsStore, MIN_BRIGHTNESS } from '../../store/settings-store';
 import { useSkyStore } from '../../store/sky-store';
@@ -17,31 +15,6 @@ import { skyBridge } from '../sky/sky-bridge';
 import type { SmoothingLevel } from '../../sensors/smoothing';
 import { useInstallPrompt } from '../../app/pwa';
 import { useWeatherStore } from '../../store/weather-store';
-
-export function LanguageSelect({ testId }: { testId?: string }) {
-  const { t, i18n } = useTranslation();
-  const setLanguage = useSettingsStore((s) => s.setLanguage);
-  return (
-    <label className="select-row">
-      <span>{t('settings.language')}</span>
-      <select
-        value={i18n.language}
-        onChange={(e) => {
-          const lang = e.target.value as LanguageCode;
-          setLanguage(lang);
-          void changeLanguage(lang);
-        }}
-        data-testid={testId}
-      >
-        {LANGUAGES.map((l) => (
-          <option key={l.code} value={l.code} lang={l.code}>
-            {l.nativeName}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
 
 export function SettingsSheet() {
   const { t, i18n } = useTranslation();
@@ -95,13 +68,28 @@ export function SettingsSheet() {
           <button type="button" className="menu-item" onClick={() => openPanel('layers')}>
             {t('menu.layers')}
           </button>
-          <button type="button" className="menu-item" onClick={() => openPanel('tonight')} data-testid="menu-tonight">
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => openPanel('tonight')}
+            data-testid="menu-tonight"
+          >
             {t('menu.tonight')}
           </button>
-          <button type="button" className="menu-item" onClick={() => openPanel('weather')} data-testid="menu-weather">
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => openPanel('weather')}
+            data-testid="menu-weather"
+          >
             {t('menu.weather')}
           </button>
-          <button type="button" className="menu-item" onClick={() => openPanel('meteors')} data-testid="menu-meteors">
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => openPanel('meteors')}
+            data-testid="menu-meteors"
+          >
             {t('menu.meteors')}
           </button>
           <button type="button" className="menu-item" onClick={() => openPanel('location')}>

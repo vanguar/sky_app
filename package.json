@@ -19,7 +19,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
     "format": "prettier --write .",
-    "catalogs": "node scripts/build-catalogs.mjs"
+    "catalogs": "node scripts/build-catalogs.mjs",
+    "i18n:names": "node scripts/build-search-names.mjs"
   },
   "dependencies": {
     "astronomy-engine": "^2.1.19",

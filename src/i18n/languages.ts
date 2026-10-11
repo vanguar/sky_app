@@ -1,12 +1,4 @@
 import type { LanguageCode } from '../catalog/types';
-import ar from './ar.json';
-import de from './de.json';
-import en from './en.json';
-import es from './es.json';
-import fr from './fr.json';
-import it from './it.json';
-import ru from './ru.json';
-import uk from './uk.json';
 
 export interface LanguageInfo {
   code: LanguageCode;
@@ -29,8 +21,6 @@ export const LANGUAGES: readonly LanguageInfo[] = [
 export const SUPPORTED_LANGUAGES: readonly LanguageCode[] = LANGUAGES.map((l) => l.code);
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'en';
-
-export const RESOURCES = { en, ru, uk, de, fr, es, it, ar } as const;
 
 export function isSupportedLanguage(code: unknown): code is LanguageCode {
   return typeof code === 'string' && (SUPPORTED_LANGUAGES as readonly string[]).includes(code);

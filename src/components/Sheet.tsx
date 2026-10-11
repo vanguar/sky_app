@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
+import { useDialogFocus } from '../utils/use-dialog-focus';
 
 interface SheetProps {
   open: boolean;
@@ -30,28 +31,12 @@ export function Sheet({
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.activeElement as HTMLElement | null;
-    const focusTarget = ref.current?.querySelector<HTMLElement>('[data-autofocus]') ?? ref.current;
-    focusTarget?.focus({ preventScroll: true });
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      prev?.focus?.({ preventScroll: true });
-    };
-  }, [open, onClose]);
+  useDialogFocus(ref, open, onClose, modal);
 
   if (!open) return null;
   return (
     <>
-      {modal && <div className="sheet-backdrop" onClick={onClose} aria-hidden="true" />}
+      {modal && <div className="sheet-backdrop" data-modal-backdrop onClick={onClose} aria-hidden="true" />}
       <div
         ref={ref}
         className={`sheet glass ${className ?? ''}`}

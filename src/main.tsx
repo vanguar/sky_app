@@ -11,15 +11,16 @@ import './styles.css';
 // Language: saved choice → browser preference → English (onboarding then asks).
 const saved = useSettingsStore.getState().language;
 const detected = detectBrowserLanguage(typeof navigator !== 'undefined' ? navigator.languages : undefined);
-const i18n = initI18n(saved ?? detected ?? DEFAULT_LANGUAGE);
 const askLanguage = !saved && !detected;
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <I18nextProvider i18n={i18n}>
-      <PlatformProvider>
-        <App askLanguage={askLanguage} />
-      </PlatformProvider>
-    </I18nextProvider>
-  </StrictMode>,
+void initI18n(saved ?? detected ?? DEFAULT_LANGUAGE).then((i18n) =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <I18nextProvider i18n={i18n}>
+        <PlatformProvider>
+          <App askLanguage={askLanguage} />
+        </PlatformProvider>
+      </I18nextProvider>
+    </StrictMode>,
+  ),
 );
