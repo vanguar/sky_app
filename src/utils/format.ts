@@ -1,4 +1,5 @@
 import { normalizeDegrees, normalizeHours } from '../astronomy/coordinate-transform';
+import { localDateKey } from './time-zone';
 
 /** Locale tag used for Intl formatting (Arabic uses Western digits for readability of coordinates). */
 export function intlLocale(lang: string): string {
@@ -15,7 +16,9 @@ export function formatDegrees(value: number, lang: string, digits = 1): string {
 
 /** Hours and minutes; `timeZone` (IANA) formats in the observer's zone instead of the device zone. */
 export function formatTime(date: Date, lang: string, timeZone?: string): string {
-  return new Intl.DateTimeFormat(intlLocale(lang), { hour: '2-digit', minute: '2-digit', timeZone }).format(date);
+  return new Intl.DateTimeFormat(intlLocale(lang), { hour: '2-digit', minute: '2-digit', timeZone }).format(
+    date,
+  );
 }
 
 /** Day and month, e.g. "12 Aug" / "12 авг.", in the observer's zone when given. */
@@ -28,13 +31,13 @@ export function formatTimeRange(start: Date, end: Date, lang: string, timeZone?:
   return `${formatTime(start, lang, timeZone)}–${formatTime(end, lang, timeZone)}`;
 }
 
-/** Time, with weekday when the date is not today. */
-export function formatEventTime(date: Date, now: Date, lang: string): string {
-  const sameDay = date.toDateString() === now.toDateString();
+/** Time in the observer's zone, with weekday when the event is on a different local date. */
+export function formatEventTime(date: Date, now: Date, lang: string, timeZone?: string): string {
+  const sameDay = localDateKey(date.getTime(), timeZone) === localDateKey(now.getTime(), timeZone);
   const opts: Intl.DateTimeFormatOptions = sameDay
     ? { hour: '2-digit', minute: '2-digit' }
     : { weekday: 'short', hour: '2-digit', minute: '2-digit' };
-  return new Intl.DateTimeFormat(intlLocale(lang), opts).format(date);
+  return new Intl.DateTimeFormat(intlLocale(lang), { ...opts, timeZone }).format(date);
 }
 
 const SUPERSCRIPT: Record<string, string> = {

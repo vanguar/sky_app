@@ -5,7 +5,6 @@ import { useLocationStore } from '../../store/location-store';
 import { useSettingsStore } from '../../store/settings-store';
 import { useSkyStore } from '../../store/sky-store';
 import { useUiStore } from '../../store/ui-store';
-import { skyBridge } from './sky-bridge';
 
 const NO_DATA_TIMEOUT_MS = 3000;
 const STATUS_POLL_MS = 250;
@@ -31,7 +30,6 @@ function fallbackToFree(platform: Platform) {
   platform.sensors.stop();
   useSkyStore.getState().setViewMode('free');
   useSkyStore.getState().setHeadingStatus(null);
-  skyBridge.renderer?.setViewMode('free', null);
 }
 
 /** Browser compasses report MAGNETIC north; astronomy uses TRUE north → WMM declination. */
@@ -80,7 +78,6 @@ export async function enableSensorMode(platform: Platform): Promise<boolean> {
   sky.setSensorStatus('active');
   sky.setViewMode('sensor');
   sky.setHeadingStatus('collecting');
-  skyBridge.renderer?.setViewMode('sensor', (dt, out) => pipeline.step(dt, out));
 
   // Heading status for the UI + development diagnostics (~2 Hz log).
   const logger = new SensorDiagnosticsLogger(sensorDiagnosticsEnabled());

@@ -129,6 +129,83 @@ describe('jump detector', () => {
 });
 
 describe('OrientationPipeline — iOS (relative alpha + webkitCompassHeading)', () => {
+  function poorAccuracy(p: OrientationPipeline, start: number, duration: number) {
+    for (let t = start; t < start + duration; t += DT) {
+      p.ingest(sample({ alpha: alphaFor(37), compassHeading: 250, compassAccuracy: 60, timestamp: t }));
+      p.step(DT, quat());
+    }
+  }
+
+  it('warns about initially poor accuracy and recalibrates when good readings return', () => {
+    const p = new OrientationPipeline('low');
+    poorAccuracy(p, 0, 6000);
+    expect(p.getHeadingStatus()).toBe('unreliable');
+    runIos(
+      p,
+      6000,
+      DT,
+      () => 37,
+      () => 120,
+    );
+    expect(p.getHeadingStatus()).toBe('collecting');
+    runIos(
+      p,
+      6000 + DT,
+      3000,
+      () => 37,
+      () => 120,
+    );
+    expect(p.getHeadingStatus()).toBe('ready');
+    expect(Math.abs(angleDelta(p.getDiagnostics().finalHeading!, 120))).toBeLessThan(1);
+  });
+
+  it('keeps its heading through poor accuracy and smoothly reacquires a stable reference', () => {
+    const p = new OrientationPipeline('low');
+    runIos(
+      p,
+      0,
+      3500,
+      () => 37,
+      () => 120,
+    );
+    poorAccuracy(p, 3500, 6000);
+    expect(p.getHeadingStatus()).toBe('unreliable');
+    expect(Math.abs(angleDelta(p.getDiagnostics().finalHeading!, 120))).toBeLessThan(1);
+    runIos(
+      p,
+      9500,
+      DT,
+      () => 37,
+      () => 143,
+    );
+    expect(p.getHeadingStatus()).toBe('collecting');
+    expect(Math.abs(angleDelta(p.getDiagnostics().finalHeading!, 120))).toBeLessThanOrEqual(6.01);
+    runIos(
+      p,
+      9500 + DT,
+      3000,
+      () => 37,
+      () => 143,
+    );
+    expect(p.getHeadingStatus()).toBe('ready');
+    expect(Math.abs(angleDelta(p.getDiagnostics().finalHeading!, 143))).toBeLessThan(1);
+  });
+
+  it('clears poor-accuracy state when a new sensor session starts', () => {
+    const p = new OrientationPipeline('low');
+    poorAccuracy(p, 0, 6000);
+    expect(p.getHeadingStatus()).toBe('unreliable');
+    p.reset();
+    expect(p.getHeadingStatus()).toBeNull();
+    runIos(
+      p,
+      6000,
+      3500,
+      () => 37,
+      () => 120,
+    );
+    expect(p.getHeadingStatus()).toBe('ready');
+  });
   it('stabilises on the compass heading, independent of the arbitrary relative zero', () => {
     const p = new OrientationPipeline('low');
     const { heading } = runIos(

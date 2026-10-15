@@ -4,12 +4,14 @@ import { useLocationStore } from '../../store/location-store';
 import { useUiStore } from '../../store/ui-store';
 import { formatLatLon, formatTime } from '../../utils/format';
 import { useNow } from '../../utils/use-now';
+import { useObserverTimeZone } from '../../utils/use-observer-time-zone';
 
 export function TopBar() {
   const { t, i18n } = useTranslation();
   const openPanel = useUiStore((s) => s.openPanel);
   const loc = useLocationStore((s) => s.location);
   const now = useNow(10000);
+  const zone = useObserverTimeZone();
 
   return (
     <header className="topbar">
@@ -33,8 +35,13 @@ export function TopBar() {
           {formatLatLon(loc.latitude, loc.longitude, i18n.language)}
         </span>
       </button>
-      <div className="chip glass time-chip" aria-label={t('topbar.time')} role="timer">
-        <span dir="ltr">{formatTime(now, i18n.language)}</span>
+      <div
+        className="chip glass time-chip"
+        aria-label={t('topbar.time')}
+        title={zone.approximate ? t('observing.timeZoneApprox', { zone: zone.label }) : zone.timeZone}
+        role="timer"
+      >
+        <span dir="ltr">{formatTime(now, i18n.language, zone.timeZone)}</span>
       </div>
       <div className="topbar-spacer" />
       <button

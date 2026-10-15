@@ -3,11 +3,12 @@ import { usePlatform } from '../../app/providers/PlatformProvider';
 import { useLocationStore } from '../../store/location-store';
 import { useSettingsStore } from '../../store/settings-store';
 import { useWeatherStore } from '../../store/weather-store';
-import { resolveObserverTimeZone, type ObserverTimeZone } from '../../utils/time-zone';
 import { useNow } from '../../utils/use-now';
 import { useObserver } from '../../utils/use-observer';
 import { useDocumentVisible } from '../../utils/use-document-visible';
 import { buildTonightModel, type TonightModel } from './tonight-model';
+
+export { useObserverTimeZone } from '../../utils/use-observer-time-zone';
 
 /**
  * Weather state for the observer. With `fetch` the forecast is (re)loaded — the service only goes
@@ -47,26 +48,6 @@ export function useWeather({ fetch }: { fetch: boolean }) {
     error,
     retry,
   };
-}
-
-/** Observer time zone (provider zone when known, see utils/time-zone.ts). */
-export function useObserverTimeZone(): ObserverTimeZone {
-  const loc = useLocationStore((s) => s.location);
-  const forecast = useWeatherStore((s) => s.forecast);
-  const enabled = useSettingsStore((s) => s.weatherEnabled);
-  const zone = enabled && forecast ? forecast.timeZone : null;
-  const fLat = forecast?.location.latitude;
-  const fLon = forecast?.location.longitude;
-  return useMemo(
-    () =>
-      resolveObserverTimeZone(
-        loc,
-        zone && fLat != null && fLon != null
-          ? { timeZone: zone, location: { latitude: fLat, longitude: fLon } }
-          : null,
-      ),
-    [loc, zone, fLat, fLon],
-  );
 }
 
 const EMPTY_MODEL: TonightModel = {

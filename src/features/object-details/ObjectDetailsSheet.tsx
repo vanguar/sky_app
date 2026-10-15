@@ -39,6 +39,8 @@ import { skyBridge } from '../sky/sky-bridge';
 import { combineObservability } from '../../observability/object-observability';
 import { assessWeather, hourAt } from '../../weather/observing-conditions';
 import { useWeather } from '../observing/use-weather';
+import { useObserverTimeZone } from '../../utils/use-observer-time-zone';
+import { TimeZoneNote } from '../observing/observing-ui';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -266,6 +268,7 @@ export function ObjectDetailsSheet() {
   const defaultLevel = useSettingsStore((s) => s.infoLevel);
   const [level, setLevel] = useState<InfoLevel>(defaultLevel);
   const observer = useObserver();
+  const zone = useObserverTimeZone();
   const active = panelOpen && !viewerOpen;
   const now = useNow(1000, active);
   const minute = Math.floor(now.getTime() / 60000);
@@ -316,7 +319,7 @@ export function ObjectDetailsSheet() {
         : t('visibility.down');
 
   const eventTime = (d: Date | null) =>
-    d ? formatEventTime(d, now, i18n.language) : t('common.notAvailable');
+    d ? formatEventTime(d, now, i18n.language, zone.timeZone) : t('common.notAvailable');
 
   return (
     <Sheet open title={name} onClose={close} testId="object-details" className="details-sheet" modal={false}>
@@ -353,6 +356,7 @@ export function ObjectDetailsSheet() {
         </Fact>
       </dl>
 
+      <TimeZoneNote zone={zone} />
       <div className="practical" data-testid="details-practical">
         <p className="practical-status">
           <span className="muted">{t('practical.label')}: </span>

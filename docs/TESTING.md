@@ -11,7 +11,7 @@ npm run test:e2e
 
 Playwright runs the production build with two workers. Chromium covers the full suite, including
 service worker installation and offline reloads. WebKit covers mobile map, deep links, multilingual
-search and RTL persistence. Weather tests block service workers so network mocks remain effective
+search, RTL persistence, remote-observer time zones and lunar rise/set display. Weather tests block service workers so network mocks remain effective
 after reload; PWA tests keep service workers enabled.
 
 To exercise the GitHub Pages path locally (PowerShell):
@@ -28,6 +28,12 @@ Both CI workflows run browser checks before accepting or publishing the build an
 Regression coverage includes full-response weather timeout, cancellation during body reading,
 late results after cache clearing/reset, remaining-night windows, repeated WebGL loss/restoration,
 renderer retry, root/unknown routes and browser history, and modal focus/background restoration.
+Phone-pointing tests verify that both WebGL restoration and renderer replacement retain sensor
+tracking and that manual control still works afterwards. Time-zone tests cover event dates across
+midnight and daylight-saving transitions, and compare the map clock, object card and navigator
+for remote locations with a provider zone or an explicitly approximate fallback. Compass tests
+cover poor accuracy at startup, loss of accuracy after calibration, and recovery with a fresh
+stable series. Lunar tests preserve real rise/set events near the circumpolar boundary.
 The 3D rotation test waits for the actual texture-ready state before comparing frames, uses a
 single-pixel device scale to limit software-GPU work, and hides transient DOM overlays in captures.
 

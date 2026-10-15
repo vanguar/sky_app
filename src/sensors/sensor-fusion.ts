@@ -81,6 +81,7 @@ export class OrientationPipeline {
   private lastAbsSample: RawOrientationSample | null = null;
   private lastMeasurement: number | null = null;
   private badAccuracySince: number | null = null;
+  private accuracyUnreliable = false;
   // absolute-only mode: gyro-checked removal of compass jumps
   private glitchDeg = 0;
   private lastAbsAzimuth: number | null = null;
@@ -185,8 +186,14 @@ export class OrientationPipeline {
     const accurate = acc == null || (acc >= 0 && acc <= MAX_COMPASS_ACCURACY_DEG);
     if (!accurate) {
       this.badAccuracySince ??= t;
-      if (t - this.badAccuracySince > BAD_ACCURACY_MS) this.estimator.markUnreliable();
+      if (t - this.badAccuracySince >= BAD_ACCURACY_MS) this.accuracyUnreliable = true;
       return;
+    }
+    if (this.accuracyUnreliable) {
+      // Quality can be bad before any heading has been accepted. Keep that warning independent
+      // of estimator startup, and require a fresh stable series when accurate samples return.
+      this.estimator.restartCollection();
+      this.accuracyUnreliable = false;
     }
     this.badAccuracySince = null;
     // webkitCompassHeading follows the back camera when the phone is held up, the top edge when flat.
@@ -252,6 +259,7 @@ export class OrientationPipeline {
   getHeadingStatus(): PipelineHeadingStatus | null {
     if (this.mode === 'pending') return null;
     if (this.mode === 'relative-only') return 'uncalibrated';
+    if (this.accuracyUnreliable) return 'unreliable';
     return this.estimator.getStatus();
   }
 
@@ -286,6 +294,7 @@ export class OrientationPipeline {
     this.lastAbsSample = null;
     this.lastMeasurement = null;
     this.badAccuracySince = null;
+    this.accuracyUnreliable = false;
     this.glitchDeg = 0;
     this.lastAbsAzimuth = null;
     this.gyroDegSinceAbs = 0;

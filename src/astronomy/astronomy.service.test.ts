@@ -71,9 +71,45 @@ describe('AstronomyService — solar system', () => {
     expect(rs.alwaysUp).toBe(true);
     expect(rs.neverUp).toBe(false);
   });
+
+  it('keeps lunar rise/set events when the current declination suggests a circumpolar Moon', () => {
+    const observer = { latitude: 70, longitude: 20, elevation: 0 };
+    const rs = svc.getRiseSet({ kind: 'body', body: 'moon' }, new Date('2026-10-05T00:00:00Z'), observer);
+    expect(rs.rise?.toISOString()).toMatch(/^2026-10-05T20:20:/);
+    expect(rs.set?.toISOString()).toMatch(/^2026-10-05T17:20:/);
+    expect(rs.alwaysUp).toBe(false);
+    expect(rs.neverUp).toBe(false);
+  });
+
+  it('keeps the polar-night classification when the Sun has no rise/set events', () => {
+    const observer = { latitude: 70, longitude: 20, elevation: 0 };
+    const rs = svc.getRiseSet({ kind: 'body', body: 'sun' }, new Date('2026-12-21T00:00:00Z'), observer);
+    expect(rs.rise).toBeNull();
+    expect(rs.set).toBeNull();
+    expect(rs.alwaysUp).toBe(false);
+    expect(rs.neverUp).toBe(true);
+  });
 });
 
 describe('AstronomyService — fixed stars', () => {
+  it('preserves circumpolar rise/set classification for fixed stars in both hemispheres', () => {
+    const date = new Date('2026-10-15T00:00:00Z');
+    const target = { kind: 'fixed' as const, ...POLARIS };
+    expect(svc.getRiseSet(target, date, berlin)).toMatchObject({
+      rise: null,
+      set: null,
+      alwaysUp: true,
+      neverUp: false,
+    });
+    expect(svc.getRiseSet(target, date, { latitude: -33.87, longitude: 151.21, elevation: 0 })).toMatchObject(
+      {
+        rise: null,
+        set: null,
+        alwaysUp: false,
+        neverUp: true,
+      },
+    );
+  });
   it('agrees between the EQJ→world matrix and the direct horizon calculation', () => {
     const date = new Date('2025-02-01T21:00:00Z');
     const m = svc.getEqjToWorldMatrix(date, berlin);

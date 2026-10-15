@@ -178,9 +178,14 @@ export class HeadingEstimator {
     return this.applied;
   }
 
-  /** Forces unreliable status (e.g. iOS reports poor compass accuracy). */
-  markUnreliable(): void {
-    if (this.status !== 'collecting') this.status = 'unreliable';
+  /** Collect a new stable reference after an accuracy outage, keeping the displayed offset smooth. */
+  restartCollection(): void {
+    this.status = 'collecting';
+    this.startAt = null;
+    this.startup = [];
+    this.pending = [];
+    this.lastT = 0;
+    this.lastResult = 'collecting';
   }
 
   getStatus(): HeadingStatus {

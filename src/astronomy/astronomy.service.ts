@@ -169,13 +169,15 @@ export class AstronomyService {
       const set = Astronomy.SearchRiseSet(body, obs, -1, date, RISE_SET_WINDOW_DAYS);
       const transit = Astronomy.SearchHourAngle(body, obs, 0, date, +1);
       const noEvents = !rise && !set;
+      // A moving body's current declination can suggest circumpolarity even though it rises or
+      // sets later in the search window. Actual events take precedence over geometric limits.
+      const upWithoutEvents = noEvents && target.kind === 'body' && this.isUp(target, date, observer);
       return {
         rise: safeTime(rise),
         set: safeTime(set),
         transit: transit ? transit.time.date : null,
-        alwaysUp:
-          limits.alwaysUp || (noEvents && target.kind === 'body' && this.isUp(target, date, observer)),
-        neverUp: limits.neverUp || (noEvents && target.kind === 'body' && !this.isUp(target, date, observer)),
+        alwaysUp: noEvents && (target.kind === 'body' ? upWithoutEvents : limits.alwaysUp),
+        neverUp: noEvents && (target.kind === 'body' ? !upWithoutEvents : limits.neverUp),
       };
     } catch {
       return { rise: null, set: null, transit: null, ...limits };

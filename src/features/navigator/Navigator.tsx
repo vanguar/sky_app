@@ -9,6 +9,8 @@ import { useCatalogStore } from '../../store/catalog-store';
 import { useSkyStore } from '../../store/sky-store';
 import { formatEventTime, formatNumber } from '../../utils/format';
 import { useObserver } from '../../utils/use-observer';
+import { useObserverTimeZone } from '../../utils/use-observer-time-zone';
+import { TimeZoneNote } from '../observing/observing-ui';
 import { skyBridge } from '../sky/sky-bridge';
 import { NEAR_DEG, ON_TARGET_DEG, navigationHints } from './navigation-hints';
 
@@ -21,6 +23,7 @@ export function Navigator() {
   const viewMode = useSkyStore((s) => s.viewMode);
   const catalog = useCatalogStore((s) => s.catalog);
   const observer = useObserver();
+  const zone = useObserverTimeZone();
   const [info, setInfo] = useState<TargetScreenInfo | null>(null);
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
 
@@ -87,7 +90,7 @@ export function Navigator() {
             {!riseSet?.neverUp && riseSet?.rise && (
               <span>
                 {t('visibility.risesAt', {
-                  time: formatEventTime(riseSet.rise, platform.time.now(), i18n.language),
+                  time: formatEventTime(riseSet.rise, platform.time.now(), i18n.language, zone.timeZone),
                 })}
               </span>
             )}
@@ -112,6 +115,7 @@ export function Navigator() {
               </span>
             </p>
           ))}
+        {below && riseSet?.rise && !riseSet.neverUp && <TimeZoneNote zone={zone} />}
         {ref.kind === 'meteor' && (
           <p className="navigator-sub" data-testid="navigator-meteor-hint">
             {t('meteors.radiantHint')}

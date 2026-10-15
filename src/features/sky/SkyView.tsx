@@ -56,6 +56,7 @@ export function SkyView() {
 
   const catalog = useCatalogStore((s) => s.catalog);
   const layers = useSkyStore((s) => s.layers);
+  const viewMode = useSkyStore((s) => s.viewMode);
   const visibleNow = useSkyStore((s) => s.visibleNow);
   const selectedId = useSkyStore((s) => s.selectedId);
   const navigationTargetId = useSkyStore((s) => s.navigationTargetId);
@@ -119,6 +120,14 @@ export function SkyView() {
       renderer.dispose();
     };
   }, [platform, rendererVersion]);
+
+  // Reattach the existing orientation pipeline whenever a renderer is replaced after an error.
+  useEffect(() => {
+    rendererRef.current?.setViewMode(
+      viewMode,
+      viewMode === 'sensor' ? (dt, out) => platform.orientation.step(dt, out) : null,
+    );
+  }, [platform, viewMode, rendererVersion]);
 
   useEffect(() => {
     if (catalog) rendererRef.current?.setCatalog(catalog);

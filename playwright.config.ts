@@ -33,7 +33,7 @@ export default defineConfig({
     },
     {
       name: 'mobile-webkit',
-      testMatch: '**/smoke.spec.ts',
+      testMatch: ['**/smoke.spec.ts', '**/observer-time.spec.ts'],
       use: { ...devices['iPhone 13'] },
     },
   ],
